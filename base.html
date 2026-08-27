@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Cart Recovery Agent{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0E1320;
+    --surface: #171D2F;
+    --surface-2: #1E2540;
+    --line: #2A3151;
+    --text: #F4F6FB;
+    --text-muted: #8A93AD;
+    --coral: #FF5D3A;
+    --emerald: #34D399;
+    --amber: #FFB020;
+    --rose: #FF4D6D;
+    --slate: #6B7690;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 100% -10%, rgba(255,93,58,0.08), transparent 60%),
+      radial-gradient(900px 500px at -10% 10%, rgba(52,211,153,0.06), transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+  }
+  .mono{ font-family: 'IBM Plex Mono', monospace; }
+  .display{ font-family: 'Space Grotesk', sans-serif; }
+
+  a{ color: inherit; text-decoration: none; }
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 22px 32px;
+    border-bottom: 1px solid var(--line);
+  }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand-mark{
+    width: 34px; height: 34px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--coral), #FF8A5B);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Space Grotesk'; font-weight:700; font-size:16px; color:#161018;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 6px 20px rgba(255,93,58,0.25);
+  }
+  .brand-name{ font-family:'Space Grotesk'; font-weight:600; font-size:16px; letter-spacing:-0.01em; }
+  .brand-sub{ font-size:12px; color: var(--text-muted); font-family:'IBM Plex Mono'; }
+
+  .nav-links{ display:flex; gap:10px; }
+  .nav-btn{
+    padding: 9px 16px; border-radius: 8px; font-size: 13.5px; font-weight: 500;
+    border: 1px solid var(--line); color: var(--text-muted);
+    transition: all .15s ease;
+  }
+  .nav-btn:hover{ color: var(--text); border-color: rgba(255,255,255,0.2); }
+  .nav-btn.primary{
+    background: var(--coral); color: #1a0c07; border-color: var(--coral); font-weight: 600;
+  }
+  .nav-btn.primary:hover{ background: #FF7452; }
+
+  .container{ max-width: 1080px; margin: 0 auto; padding: 40px 32px 80px; }
+
+  .eyebrow{
+    font-family:'IBM Plex Mono'; font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--coral); margin-bottom: 10px; display:flex; align-items:center; gap:8px;
+  }
+  .eyebrow::before{ content:''; width:16px; height:1px; background: var(--coral); }
+
+  .page-title{ font-family:'Space Grotesk'; font-size: 34px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 8px; }
+  .page-sub{ color: var(--text-muted); font-size: 15px; max-width: 560px; line-height: 1.55; }
+
+  ::selection{ background: var(--coral); color:#1a0c07; }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">CR</div>
+      <div>
+        <div class="brand-name">Cart Recovery Agent</div>
+        <div class="brand-sub">agentic revenue recovery · v1.0</div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="/" class="nav-btn">Dashboard</a>
+      <a href="/add" class="nav-btn primary">+ New Cart</a>
+    </div>
+  </div>
+
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

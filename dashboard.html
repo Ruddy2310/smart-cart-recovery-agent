@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · Cart Recovery Agent{% endblock %}
+{% block content %}
+
+<div class="eyebrow">Live pipeline</div>
+<h1 class="page-title">Abandoned carts, sorted by who to save first.</h1>
+<p class="page-sub">Every cart below is scored on value, intent, and idle time — the agent decides urgency and discount depth per customer instead of one flat offer for everyone.</p>
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-label">Carts tracked</div>
+    <div class="stat-value mono">{{ stats.total_carts }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Still abandoned</div>
+    <div class="stat-value mono" style="color:var(--rose)">{{ stats.abandoned }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Recovered</div>
+    <div class="stat-value mono" style="color:var(--emerald)">{{ stats.recovered }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Value at risk</div>
+    <div class="stat-value mono">₹{{ "%.0f"|format(stats.total_value) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Value recovered</div>
+    <div class="stat-value mono" style="color:var(--emerald)">₹{{ "%.0f"|format(stats.recovered_value) }}</div>
+  </div>
+</div>
+
+{% if not carts %}
+<div class="empty-state">
+  <div class="empty-title">No carts yet</div>
+  <p class="empty-copy">Add a cart manually, or load sample data to see the agent score and message real-looking abandoned carts.</p>
+  <div style="display:flex; gap:10px; margin-top:18px;">
+    <a href="/add" class="nav-btn primary">+ New Cart</a>
+    <a href="/seed" class="nav-btn">Load sample data</a>
+  </div>
+</div>
+{% else %}
+
+<div class="section-row">
+  <div class="section-label">Recovery queue — {{ carts|length }} carts</div>
+  <a href="/seed" class="nav-btn" style="font-size:12.5px;">↻ reload sample data</a>
+</div>
+
+<div class="cart-list">
+  {% for cart in carts %}
+  <div class="receipt {% if cart.status == 'recovered' %}is-recovered{% endif %}" id="cart-{{ cart.id }}">
+    <div class="receipt-top">
+      <div>
+        <div class="receipt-customer">{{ cart.customer_name }}
+          {% if cart.is_repeat_customer %}<span class="repeat-chip">repeat</span>{% endif %}
+        </div>
+        <div class="receipt-contact mono">{{ cart.customer_contact }}</div>
+      </div>
+      <div class="priority-stamp priority-{{ cart.priority|lower }}">{{ cart.priority }}</div>
+    </div>
+
+    <div class="receipt-divider"></div>
+
+    <div class="receipt-line">
+      <span>{{ cart.items_count }}× {{ cart.product_name }}</span>
+      <span class="mono">₹{{ "%.0f"|format(cart.cart_value) }}</span>
+    </div>
+    <div class="receipt-meta mono">idle {{ cart.idle_hours }}h · score {{ cart.score }}</div>
+
+    {% if cart.recovery_message %}
+    <div class="ai-message">
+      <div class="ai-message-label">✦ Agent-generated message · {{ cart.discount_offered }}% off</div>
+      <div class="ai-message-body">{{ cart.recovery_message }}</div>
+    </div>
+    {% endif %}
+
+    <div class="receipt-actions">
+      {% if cart.status != 'recovered' %}
+      <button class="action-btn generate" onclick="generateMessage({{ cart.id }})">
+        {% if cart.recovery_message %}↻ Regenerate{% else %}✦ Generate message{% endif %}
+      </button>
+      <form method="POST" action="/recover/{{ cart.id }}" style="display:inline;">
+        <button type="submit" class="action-btn recover">Mark recovered</button>
+      </form>
+      {% else %}
+      <span class="recovered-chip">✓ Recovered</span>
+      {% endif %}
+      <form method="POST" action="/delete/{{ cart.id }}" style="display:inline; margin-left:auto;">
+        <button type="submit" class="action-btn delete">Remove</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<style>
+  .stat-grid{ display:grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 32px 0 40px; }
+  .stat-card{ background: var(--surface); border:1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .stat-label{ font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+  .stat-value{ font-size: 22px; font-weight: 600; }
+
+  .empty-state{ background: var(--surface); border: 1px dashed var(--line); border-radius: 14px; padding: 48px; text-align:center; }
+  .empty-title{ font-family:'Space Grotesk'; font-size: 18px; font-weight:600; margin-bottom: 8px;}
+  .empty-copy{ color: var(--text-muted); font-size: 14px; max-width: 420px; margin: 0 auto; }
+
+  .section-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 16px; }
+  .section-label{ font-family:'IBM Plex Mono'; font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+  .cart-list{ display:flex; flex-direction:column; gap: 14px; }
+
+  .receipt{
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px 22px;
+    position: relative;
+    background-image: repeating-linear-gradient(90deg, transparent 0 6px, transparent 6px 6px);
+  }
+  .receipt::before{
+    content:'';
+    position:absolute; left:0; right:0; top:0; height:3px; border-radius: 14px 14px 0 0;
+    background: repeating-linear-gradient(90deg, var(--line) 0 8px, transparent 8px 16px);
+    opacity: .6;
+  }
+  .receipt.is-recovered{ opacity: 0.55; }
+
+  .receipt-top{ display:flex; align-items:flex-start; justify-content:space-between; }
+  .receipt-customer{ font-family:'Space Grotesk'; font-weight:600; font-size:16px; display:flex; align-items:center; gap:8px; }
+  .receipt-contact{ font-size: 12.5px; color: var(--text-muted); margin-top:2px; }
+  .repeat-chip{ font-size: 10px; background: rgba(52,211,153,0.15); color: var(--emerald); padding: 2px 7px; border-radius: 20px; font-family:'IBM Plex Mono'; }
+
+  .priority-stamp{
+    font-family:'IBM Plex Mono'; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 12px; border-radius: 6px; transform: rotate(2deg); border: 1.5px solid;
+  }
+  .priority-high{ color: var(--rose); border-color: var(--rose); background: rgba(255,77,109,0.08); }
+  .priority-medium{ color: var(--amber); border-color: var(--amber); background: rgba(255,176,32,0.08); }
+  .priority-low{ color: var(--slate); border-color: var(--slate); background: rgba(107,118,144,0.08); }
+
+  .receipt-divider{ border-top: 1px dashed var(--line); margin: 14px 0 12px; }
+
+  .receipt-line{ display:flex; justify-content:space-between; font-size: 14.5px; margin-bottom: 4px; }
+  .receipt-meta{ font-size: 11.5px; color: var(--text-muted); }
+
+  .ai-message{ margin-top: 14px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .ai-message-label{ font-family:'IBM Plex Mono'; font-size: 10.5px; color: var(--coral); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .ai-message-body{ font-size: 13.5px; line-height: 1.5; color: #DCE1EE; }
+
+  .receipt-actions{ display:flex; gap:8px; margin-top: 16px; align-items:center; }
+  .action-btn{ font-family:'Inter'; font-size: 12.5px; font-weight: 500; padding: 8px 14px; border-radius: 7px; border: 1px solid var(--line); background: transparent; color: var(--text-muted); cursor:pointer; transition: all .15s ease; }
+  .action-btn.generate{ color: var(--coral); border-color: rgba(255,93,58,0.4); }
+  .action-btn.generate:hover{ background: rgba(255,93,58,0.1); }
+  .action-btn.recover{ color: var(--emerald); border-color: rgba(52,211,153,0.4); }
+  .action-btn.recover:hover{ background: rgba(52,211,153,0.1); }
+  .action-btn.delete:hover{ color: var(--rose); border-color: rgba(255,77,109,0.4); }
+  .recovered-chip{ font-family:'IBM Plex Mono'; font-size: 12px; color: var(--emerald); }
+
+  @media (max-width: 700px){
+    .stat-grid{ grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+
+<script>
+async function generateMessage(cartId) {
+  const btn = event.target;
+  const originalText = btn.textContent;
+  btn.textContent = 'Thinking…';
+  btn.disabled = true;
+  try {
+    const res = await fetch(`/generate/${cartId}`, { method: 'POST' });
+    const data = await res.json();
+    location.reload();
+  } catch (e) {
+    btn.textContent = originalText;
+    btn.disabled = false;
+    alert('Could not generate message.');
+  }
+}
+</script>
+
+{% endblock %}
