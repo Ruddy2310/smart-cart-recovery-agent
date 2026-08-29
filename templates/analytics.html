@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Analytics \u00b7 Cart Recovery{% endblock %}
+{% block content %}
+
+<div class="eyebrow">Performance</div>
+<h1 class="page-title">Recovery Analytics</h1>
+<p class="page-sub">How well the agent's decisions are converting, broken down by channel, offer depth and purchase intent.</p>
+
+<div class="metric-row" style="margin-top:26px;">
+  <div class="metric-card"><div class="metric-label">Revenue recovered</div><div class="metric-value" style="color:var(--emerald)">{{ stats.recovered_value|inr }}</div></div>
+  <div class="metric-card"><div class="metric-label">Recovery rate</div><div class="metric-value">{{ stats.recovery_rate }}%</div></div>
+  <div class="metric-card"><div class="metric-label">Revenue at risk</div><div class="metric-value">{{ stats.recoverable_value|inr }}</div></div>
+  <div class="metric-card"><div class="metric-label">Avg. time to recovery</div><div class="metric-value">{{ avg_idle_recovered }}h</div></div>
+</div>
+
+<div class="analytics-grid">
+  <div class="a-card">
+    <div class="section-label">Best performing channel</div>
+    <div class="a-highlight">{{ best_channel }}</div>
+    <div class="mini-bars">
+      {% for ch, count in channel_counts.items() %}
+      <div class="mini-row">
+        <span class="mini-label">{{ ch }}</span>
+        <div class="mini-track"><div class="mini-fill" style="width:{{ (count / (channel_counts.values()|max)) * 100 }}%"></div></div>
+        <span class="mini-count mono">{{ count }}</span>
+      </div>
+      {% else %}
+      <div class="feed-empty">No recovered carts yet.</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="a-card">
+    <div class="section-label">Best performing offer</div>
+    <div class="a-highlight">{{ best_offer }}</div>
+    <div class="mini-bars">
+      {% for offer, count in offer_counts.items() %}
+      <div class="mini-row">
+        <span class="mini-label">{{ offer }}</span>
+        <div class="mini-track"><div class="mini-fill" style="width:{{ (count / (offer_counts.values()|max)) * 100 }}%; background:var(--amber);"></div></div>
+        <span class="mini-count mono">{{ count }}</span>
+      </div>
+      {% else %}
+      <div class="feed-empty">No recovered carts yet.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="section-row" style="margin-top:30px;">
+  <div class="section-label">Conversion by intent score</div>
+</div>
+<div class="intent-table-wrap">
+  <table class="intent-table">
+    <thead><tr><th>Intent tier</th><th>Carts</th><th>Recovery rate</th><th></th></tr></thead>
+    <tbody>
+      {% for row in intent_rows %}
+      <tr>
+        <td><span class="intent-badge intent-{{ row.label|lower|replace(' ', '-') }}">{{ row.label }}</span></td>
+        <td class="mono">{{ row.count }}</td>
+        <td class="mono">{{ row.rate }}%</td>
+        <td style="width:40%;"><div class="mini-track" style="width:100%;"><div class="mini-fill" style="width:{{ row.rate }}%"></div></div></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .analytics-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-top: 28px; }
+  .a-card{ background: var(--surface); border:1px solid var(--line); border-radius:14px; padding:20px 22px; }
+  .a-highlight{ font-family:'Space Grotesk'; font-size:22px; font-weight:700; margin: 10px 0 18px; }
+  .mini-bars{ display:flex; flex-direction:column; gap:10px; }
+  .mini-row{ display:flex; align-items:center; gap:10px; }
+  .mini-label{ font-size:12px; color: var(--text-muted); width: 90px; flex-shrink:0; }
+  .mini-track{ flex:1; height:6px; background: var(--surface-2); border-radius:4px; overflow:hidden; }
+  .mini-fill{ height:100%; background: var(--coral); border-radius:4px; }
+  .mini-count{ font-size:11.5px; color: var(--text-dim); width:20px; text-align:right; }
+
+  .intent-table-wrap{ background: var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden; margin-top:14px; }
+  .intent-table{ width:100%; border-collapse:collapse; }
+  .intent-table thead th{ text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; color: var(--text-dim); padding: 12px 18px; border-bottom:1px solid var(--line); background: var(--surface-2); font-weight:500; }
+  .intent-table tbody td{ padding: 13px 18px; border-bottom:1px solid var(--line-soft); font-size:13px; }
+  .intent-table tbody tr:last-child td{ border-bottom:none; }
+
+  @media (max-width: 800px){ .analytics-grid{ grid-template-columns: 1fr; } }
+</style>
+
+{% endblock %}

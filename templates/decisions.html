@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}AI Decisions \u00b7 Cart Recovery{% endblock %}
+{% block content %}
+
+<div class="eyebrow">Audit trail</div>
+<h1 class="page-title">AI Decision Log</h1>
+<p class="page-sub">Every action the agent takes \u2014 timestamped, with the business reason and the expected revenue impact \u2014 so a human can audit and override it.</p>
+
+{% if not decisions %}
+<div class="empty-state">
+  <div class="empty-title">No decisions logged yet</div>
+  <p class="empty-copy">Load the demo workspace or generate a recovery message from the dashboard to see the agent's decisions appear here.</p>
+  <div style="margin-top:18px;"><a href="/seed" class="btn primary">Load demo workspace</a></div>
+</div>
+{% else %}
+<div class="log-table-wrap">
+  <table class="log-table">
+    <thead>
+      <tr><th>Time</th><th>Customer</th><th>Decision</th><th>Reason</th><th>Expected impact</th><th>Outcome</th></tr>
+    </thead>
+    <tbody>
+      {% for d in decisions %}
+      <tr>
+        <td class="mono text-muted">{{ d.created_at[5:16]|replace('T', ' ') }}</td>
+        <td class="cust">{{ d.customer_name }}</td>
+        <td>{{ d.decision }}</td>
+        <td class="reason-cell">{{ d.reason }}</td>
+        <td class="mono">{% if d.expected_impact %}\u20b9{{ "%.0f"|format(d.expected_impact) }}{% else %}\u2014{% endif %}</td>
+        <td><span class="outcome-chip outcome-{{ d.outcome|lower }}">{{ d.outcome }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<style>
+  .log-table-wrap{ background: var(--surface); border:1px solid var(--line); border-radius: 14px; overflow-x:auto; margin-top:26px; }
+  .log-table{ width:100%; border-collapse: collapse; min-width: 800px; }
+  .log-table thead th{ text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; color: var(--text-dim); padding: 12px 18px; border-bottom:1px solid var(--line); background: var(--surface-2); font-weight:500; }
+  .log-table tbody td{ padding: 12px 18px; border-bottom: 1px solid var(--line-soft); font-size: 12.5px; vertical-align: top; }
+  .log-table tbody tr:last-child td{ border-bottom:none; }
+  .cust{ font-weight:600; white-space:nowrap; }
+  .reason-cell{ color: var(--text-muted); max-width: 380px; line-height:1.5; }
+  .outcome-chip{ font-size:10.5px; font-weight:600; padding:3px 9px; border-radius:6px; white-space:nowrap; }
+  .outcome-pending{ color: var(--amber); background: var(--amber-dim); }
+  .outcome-recovered{ color: var(--emerald); background: var(--emerald-dim); }
+</style>
+
+{% endblock %}
