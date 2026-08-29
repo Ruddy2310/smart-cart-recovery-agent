@@ -9,10 +9,7 @@
   ],
   "functions": {
     "api/index.py": {
-      "includeFiles": [
-        "app.py",
-        "templates/**"
-      ]
+      "includeFiles": "templates/**"
     }
   },
   "routes": [
