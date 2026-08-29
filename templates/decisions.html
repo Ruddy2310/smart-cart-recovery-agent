@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}AI Decisions \u00b7 Cart Recovery{% endblock %}
+{% block title %}AI Decisions · Cart Recovery{% endblock %}
 {% block content %}
 
 <div class="eyebrow">Audit trail</div>
 <h1 class="page-title">AI Decision Log</h1>
-<p class="page-sub">Every action the agent takes \u2014 timestamped, with the business reason and the expected revenue impact \u2014 so a human can audit and override it.</p>
+<p class="page-sub">Every action the agent takes — timestamped, with the business reason and the expected revenue impact — so a human can audit and override it.</p>
 
 {% if not decisions %}
 <div class="empty-state">
@@ -25,7 +25,7 @@
         <td class="cust">{{ d.customer_name }}</td>
         <td>{{ d.decision }}</td>
         <td class="reason-cell">{{ d.reason }}</td>
-        <td class="mono">{% if d.expected_impact %}\u20b9{{ "%.0f"|format(d.expected_impact) }}{% else %}\u2014{% endif %}</td>
+        <td class="mono">{% if d.expected_impact %}₹{{ "%.0f"|format(d.expected_impact) }}{% else %}—{% endif %}</td>
         <td><span class="outcome-chip outcome-{{ d.outcome|lower }}">{{ d.outcome }}</span></td>
       </tr>
       {% endfor %}

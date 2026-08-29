@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Overview \u00b7 Cart Recovery{% endblock %}
+{% block title %}Overview · Cart Recovery{% endblock %}
 {% block content %}
 
 <div class="hero-row">
@@ -18,27 +18,27 @@
   <div class="metric-card">
     <div class="metric-label">Recoverable revenue</div>
     <div class="metric-value">{{ stats.recoverable_value|inr }}</div>
-    <div class="metric-trend up">\u2191 {{ stats.recoverable_delta }}% <span>vs last 7 days</span></div>
+    <div class="metric-trend up">↑ {{ stats.recoverable_delta }}% <span>vs last 7 days</span></div>
   </div>
   <div class="metric-card">
     <div class="metric-label">Recovered revenue</div>
     <div class="metric-value" style="color:var(--emerald)">{{ stats.recovered_value|inr }}</div>
-    <div class="metric-trend up">\u2191 {{ stats.recovery_rate_delta }}% <span>vs last 7 days</span></div>
+    <div class="metric-trend up">↑ {{ stats.recovery_rate_delta }}% <span>vs last 7 days</span></div>
   </div>
   <div class="metric-card">
     <div class="metric-label">Recovery rate</div>
     <div class="metric-value">{{ stats.recovery_rate }}%</div>
-    <div class="metric-trend {% if stats.recovery_rate_delta >= 0 %}up{% else %}down{% endif %}">{% if stats.recovery_rate_delta >= 0 %}\u2191{% else %}\u2193{% endif %} {{ stats.recovery_rate_delta }}% <span>vs last 7 days</span></div>
+    <div class="metric-trend {% if stats.recovery_rate_delta >= 0 %}up{% else %}down{% endif %}">{% if stats.recovery_rate_delta >= 0 %}↑{% else %}↓{% endif %} {{ stats.recovery_rate_delta }}% <span>vs last 7 days</span></div>
   </div>
   <div class="metric-card">
     <div class="metric-label">High intent carts</div>
     <div class="metric-value">{{ stats.high_intent }}</div>
-    <div class="metric-trend {% if stats.high_intent_delta >= 0 %}up{% else %}down{% endif %}">{% if stats.high_intent_delta >= 0 %}\u2191{% else %}\u2193{% endif %} {{ stats.high_intent_delta|abs }}% <span>vs last 7 days</span></div>
+    <div class="metric-trend {% if stats.high_intent_delta >= 0 %}up{% else %}down{% endif %}">{% if stats.high_intent_delta >= 0 %}↑{% else %}↓{% endif %} {{ stats.high_intent_delta|abs }}% <span>vs last 7 days</span></div>
   </div>
   <div class="metric-card">
     <div class="metric-label">Avg. recovery value</div>
     <div class="metric-value">{{ stats.avg_recovery_value|inr }}</div>
-    <div class="metric-trend {% if stats.avg_recovery_delta >= 0 %}up{% else %}down{% endif %}">{% if stats.avg_recovery_delta >= 0 %}\u2191{% else %}\u2193{% endif %} {{ stats.avg_recovery_delta|abs }}% <span>vs last 7 days</span></div>
+    <div class="metric-trend {% if stats.avg_recovery_delta >= 0 %}up{% else %}down{% endif %}">{% if stats.avg_recovery_delta >= 0 %}↑{% else %}↓{% endif %} {{ stats.avg_recovery_delta|abs }}% <span>vs last 7 days</span></div>
   </div>
 </div>
 
@@ -96,7 +96,7 @@
             <div class="feed-time mono">{{ d.created_at[11:16] if d.created_at|length > 15 else '' }}</div>
             <div class="feed-body">
               <div class="feed-decision">{{ d.decision }}</div>
-              <div class="feed-meta">{{ d.customer_name }}{% if d.expected_impact %} \u00b7 \u20b9{{ "%.0f"|format(d.expected_impact) }}{% endif %}</div>
+              <div class="feed-meta">{{ d.customer_name }}{% if d.expected_impact %} · ₹{{ "%.0f"|format(d.expected_impact) }}{% endif %}</div>
             </div>
           </div>
           {% endfor %}
@@ -104,13 +104,13 @@
           <div class="feed-empty">No agent activity yet. Generate a recovery message to see decisions appear here.</div>
         {% endif %}
       </div>
-      <a href="/decisions" class="feed-link">View full decision log \u2192</a>
+      <a href="/decisions" class="feed-link">View full decision log →</a>
     </div>
   </div>
 </div>
 
 <div class="section-row" id="queue">
-  <div class="section-label">Priority Recovery Queue \u2014 {{ queue|length }} active</div>
+  <div class="section-label">Priority Recovery Queue — {{ queue|length }} active</div>
 </div>
 
 <div class="queue-table-wrap">
@@ -131,9 +131,9 @@
       <tr class="queue-row" data-search="{{ cart.customer_name }} {{ cart.product_name }} {{ cart.customer_contact }}" onclick="openCart({{ cart.id }})">
         <td>
           <div class="cust-name">{{ cart.customer_name }}{% if cart.is_repeat_customer %}<span class="repeat-chip">repeat</span>{% endif %}</div>
-          <div class="cust-product mono">{{ cart.items_count }}\u00d7 {{ cart.product_name }}</div>
+          <div class="cust-product mono">{{ cart.items_count }}× {{ cart.product_name }}</div>
         </td>
-        <td class="mono">\u20b9{{ "%.0f"|format(cart.cart_value) }}</td>
+        <td class="mono">₹{{ "%.0f"|format(cart.cart_value) }}</td>
         <td><span class="intent-badge intent-{{ cart.intent|lower|replace(' ', '-') }}">{{ cart.intent }}</span></td>
         <td class="mono text-muted">{{ cart.idle_label }}</td>
         <td>
@@ -150,9 +150,9 @@
       <tr class="queue-row is-recovered" data-search="{{ cart.customer_name }} {{ cart.product_name }}" onclick="openCart({{ cart.id }})">
         <td>
           <div class="cust-name">{{ cart.customer_name }}{% if cart.is_repeat_customer %}<span class="repeat-chip">repeat</span>{% endif %}</div>
-          <div class="cust-product mono">{{ cart.items_count }}\u00d7 {{ cart.product_name }}</div>
+          <div class="cust-product mono">{{ cart.items_count }}× {{ cart.product_name }}</div>
         </td>
-        <td class="mono">\u20b9{{ "%.0f"|format(cart.cart_value) }}</td>
+        <td class="mono">₹{{ "%.0f"|format(cart.cart_value) }}</td>
         <td><span class="intent-badge intent-{{ cart.intent|lower|replace(' ', '-') }}">{{ cart.intent }}</span></td>
         <td class="mono text-muted">{{ cart.idle_label }}</td>
         <td>
@@ -206,7 +206,7 @@
 <!-- Cart detail modal -->
 <div class="modal-overlay" id="cartModal" onclick="if(event.target===this) closeCart()">
   <div class="modal-panel">
-    <button class="modal-close" onclick="closeCart()">\u00d7</button>
+    <button class="modal-close" onclick="closeCart()">×</button>
     <div id="modalBody"></div>
   </div>
 </div>
@@ -344,8 +344,8 @@
 
     const signalRows = [
       ['Previous purchases', c.signals.previous_purchases > 0 ? c.signals.previous_purchases : 'First-time customer'],
-      ['Avg. order value', c.signals.avg_order_value ? '\u20b9' + Math.round(c.signals.avg_order_value) : '\u2014'],
-      ['Last purchase', c.signals.last_purchase_days ? c.signals.last_purchase_days + ' days ago' : '\u2014'],
+      ['Avg. order value', c.signals.avg_order_value ? '₹' + Math.round(c.signals.avg_order_value) : '—'],
+      ['Last purchase', c.signals.last_purchase_days ? c.signals.last_purchase_days + ' days ago' : '—'],
       ['Device', c.signals.device],
       ['Location', c.signals.location],
       ['Session duration', c.signals.session_minutes + ' min'],
@@ -356,7 +356,7 @@
     body.innerHTML = `
       <div class="md-header">
         <div class="md-name">${c.customer_name}</div>
-        <div class="md-sub mono">${c.customer_contact} \u00b7 Cart #${id} \u00b7 \u20b9${Math.round(c.cart_value)} \u00b7 ${c.status}</div>
+        <div class="md-sub mono">${c.customer_contact} · Cart #${id} · ₹${Math.round(c.cart_value)} · ${c.status}</div>
       </div>
 
       <div class="md-section-title">Customer signals</div>
@@ -368,7 +368,7 @@
       <div class="ai-metric-grid">
         <div class="ai-metric"><div class="ai-metric-label">Recovery probability</div><div class="ai-metric-value">${c.probability}%</div></div>
         <div class="ai-metric"><div class="ai-metric-label">Purchase intent</div><div class="ai-metric-value" style="font-size:14px;">${c.intent}</div></div>
-        <div class="ai-metric"><div class="ai-metric-label">Est. recoverable</div><div class="ai-metric-value" style="font-size:14px;">\u20b9${Math.round(c.estimated_recoverable)}</div></div>
+        <div class="ai-metric"><div class="ai-metric-label">Est. recoverable</div><div class="ai-metric-value" style="font-size:14px;">₹${Math.round(c.estimated_recoverable)}</div></div>
       </div>
 
       <div class="md-section-title">Why the agent chose this action</div>
@@ -379,12 +379,12 @@
       <div class="rec-card">
         <div class="rec-card-title">Agent recommendation</div>
         <div class="rec-action">${c.action_text}</div>
-        <div class="rec-detail">Expected recovery \u20b9${Math.round(c.estimated_recoverable)} \u00b7 Confidence ${c.probability}%</div>
+        <div class="rec-detail">Expected recovery ₹${Math.round(c.estimated_recoverable)} · Confidence ${c.probability}%</div>
         <div class="rec-buttons">
           ${c.status !== 'recovered' ? `
             <button class="btn primary" style="font-size:12.5px;" onclick="approveAndSend(${id})">Approve & Send</button>
             <form method="POST" action="/recover/${id}" style="display:inline;"><button type="submit" class="btn ghost-emerald" style="font-size:12.5px;">Mark recovered</button></form>
-          ` : `<span style="font-size:12.5px; color:var(--emerald);">\u2713 Recovered</span>`}
+          ` : `<span style="font-size:12.5px; color:var(--emerald);">✓ Recovered</span>`}
           <button class="btn" style="font-size:12.5px;" onclick="closeCart()">Dismiss</button>
         </div>
       </div>

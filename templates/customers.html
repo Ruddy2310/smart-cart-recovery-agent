@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Customers \u00b7 Cart Recovery{% endblock %}
+{% block title %}Customers · Cart Recovery{% endblock %}
 {% block content %}
 
 <div class="eyebrow">Customer base</div>
 <h1 class="page-title">Customers</h1>
-<p class="page-sub">Every customer the agent has seen, aggregated across their carts \u2014 useful for spotting your most valuable repeat buyers at risk.</p>
+<p class="page-sub">Every customer the agent has seen, aggregated across their carts — useful for spotting your most valuable repeat buyers at risk.</p>
 
 {% if not customers %}
 <div class="empty-state">
@@ -22,7 +22,7 @@
         <td class="cust-name-cell">{{ c.customer_name }}</td>
         <td class="mono text-muted">{{ c.customer_contact }}</td>
         <td class="mono">{{ c.carts }}</td>
-        <td class="mono">\u20b9{{ "%.0f"|format(c.total_value) }}</td>
+        <td class="mono">₹{{ "%.0f"|format(c.total_value) }}</td>
         <td class="mono">{{ c.recovered }}/{{ c.carts }}</td>
         <td>{% if c.is_repeat %}<span class="repeat-chip">repeat</span>{% else %}<span class="text-muted" style="font-size:11.5px;">new</span>{% endif %}</td>
       </tr>
