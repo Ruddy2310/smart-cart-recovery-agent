@@ -8,25 +8,26 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: #0B0F1A;
-    --sidebar-bg: #0D1220;
-    --surface: #131829;
-    --surface-2: #1A2036;
-    --line: #242B45;
-    --line-soft: #1C2238;
-    --text: #F2F4FA;
-    --text-muted: #8993AF;
-    --text-dim: #5B6483;
-    --coral: #FF5D3A;
-    --coral-dim: rgba(255,93,58,0.12);
-    --emerald: #34D399;
-    --emerald-dim: rgba(52,211,153,0.12);
-    --amber: #F5A623;
-    --amber-dim: rgba(245,166,35,0.12);
-    --rose: #FB5B7A;
-    --rose-dim: rgba(251,91,122,0.12);
-    --blue: #6E8BFF;
-    --blue-dim: rgba(110,139,255,0.12);
+    --bg: #F7F6FB;
+    --sidebar-bg: #FFFFFF;
+    --surface: #FFFFFF;
+    --surface-2: #F5F4FB;
+    --line: #E7E5F2;
+    --line-soft: #EEECF8;
+    --text: #18161F;
+    --text-muted: #6F6C82;
+    --text-dim: #A6A3B8;
+    --coral: #7F77DD;
+    --coral-dim: rgba(127,119,221,0.12);
+    --coral-text: #FFFFFF;
+    --emerald: #1D9E75;
+    --emerald-dim: rgba(29,158,117,0.12);
+    --amber: #BA7517;
+    --amber-dim: rgba(186,117,23,0.12);
+    --rose: #D4537E;
+    --rose-dim: rgba(212,83,126,0.12);
+    --blue: #378ADD;
+    --blue-dim: rgba(55,138,221,0.12);
     --sidebar-w: 232px;
   }
   *{ box-sizing: border-box; }
@@ -42,7 +43,7 @@
   .mono{ font-family: 'IBM Plex Mono', monospace; }
   .display{ font-family: 'Space Grotesk', sans-serif; }
   a{ color: inherit; text-decoration: none; }
-  ::selection{ background: var(--coral); color:#1a0c07; }
+  ::selection{ background: var(--coral); color: var(--coral-text); }
   svg{ display:block; }
 
   /* ---------- Sidebar ---------- */
@@ -56,9 +57,9 @@
     width: 30px; height: 30px; border-radius: 8px; flex-shrink:0;
     background: var(--coral);
     display:flex; align-items:center; justify-content:center;
-    font-family:'Space Grotesk'; font-weight:700; font-size:13.5px; color:#1a0c07;
+    font-family:'Space Grotesk'; font-weight:700; font-size:13.5px; color: var(--coral-text);
   }
-  .brand-name{ font-family:'Space Grotesk'; font-weight:600; font-size:14.5px; letter-spacing:-0.01em; line-height:1.25; }
+  .brand-name{ font-family:'Space Grotesk'; font-weight:600; font-size:14.5px; letter-spacing:-0.01em; line-height:1.25; color: var(--text); }
   .brand-sub{ font-size:10.5px; color: var(--text-dim); font-family:'IBM Plex Mono'; letter-spacing:0.02em; }
 
   .side-nav{ flex:1; padding: 14px 12px; display:flex; flex-direction:column; gap:2px; overflow-y:auto; }
@@ -68,15 +69,15 @@
     font-size: 13px; font-weight: 500; color: var(--text-muted); transition: all .12s ease;
   }
   .side-link svg{ opacity:.85; flex-shrink:0; }
-  .side-link:hover{ color: var(--text); background: var(--surface); }
-  .side-link.active{ color: var(--text); background: var(--surface-2); }
+  .side-link:hover{ color: var(--text); background: var(--surface-2); }
+  .side-link.active{ color: #3C3489; background: var(--coral-dim); }
   .side-link.active svg{ opacity:1; color: var(--coral); }
 
   .sidebar-footer{ padding: 14px; border-top: 1px solid var(--line-soft); }
   .agent-status{ display:flex; align-items:center; gap:8px; font-size:12px; color: var(--text-muted); padding: 8px 10px; }
   .status-dot{ width:6px; height:6px; border-radius:50%; background: var(--emerald); box-shadow: 0 0 0 3px var(--emerald-dim); flex-shrink:0; }
-  .workspace-chip{ display:flex; align-items:center; gap:9px; padding: 9px 10px; margin-top:4px; border-radius:8px; background: var(--surface); border:1px solid var(--line-soft); }
-  .workspace-avatar{ width:22px; height:22px; border-radius:6px; background: var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; color: var(--text-muted); flex-shrink:0; }
+  .workspace-chip{ display:flex; align-items:center; gap:9px; padding: 9px 10px; margin-top:4px; border-radius:8px; background: var(--surface-2); border:1px solid var(--line-soft); }
+  .workspace-avatar{ width:22px; height:22px; border-radius:6px; background: var(--coral-dim); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; color: #3C3489; flex-shrink:0; }
   .workspace-name{ font-size:12px; font-weight:500; color: var(--text); }
   .workspace-sub{ font-size:10.5px; color: var(--text-dim); }
 
@@ -86,10 +87,10 @@
   .topbar{
     display:flex; align-items:center; justify-content:space-between; gap:16px;
     padding: 14px 32px; border-bottom: 1px solid var(--line-soft);
-    position: sticky; top:0; background: rgba(11,15,26,0.85); backdrop-filter: blur(8px); z-index: 30;
+    position: sticky; top:0; background: rgba(255,255,255,0.85); backdrop-filter: blur(8px); z-index: 30;
   }
   .topbar-search{
-    display:flex; align-items:center; gap:8px; background: var(--surface); border:1px solid var(--line);
+    display:flex; align-items:center; gap:8px; background: var(--surface-2); border:1px solid var(--line);
     border-radius:8px; padding: 7px 12px; width: 260px; color: var(--text-dim);
   }
   .topbar-search input{
@@ -97,7 +98,7 @@
   }
   .topbar-search input::placeholder{ color: var(--text-dim); }
   .topbar-right{ display:flex; align-items:center; gap:14px; }
-  .topbar-avatar{ width:28px; height:28px; border-radius:7px; background: var(--surface-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color: var(--text-muted); }
+  .topbar-avatar{ width:28px; height:28px; border-radius:7px; background: var(--coral-dim); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color: #3C3489; }
 
   .container{ max-width: 1180px; padding: 36px 32px 80px; width:100%; margin:0 auto; }
 
@@ -106,24 +107,24 @@
     color: var(--coral); margin-bottom: 10px; display:flex; align-items:center; gap:8px;
   }
   .eyebrow::before{ content:''; width:14px; height:1px; background: var(--coral); }
-  .page-title{ font-family:'Space Grotesk'; font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 8px; }
+  .page-title{ font-family:'Space Grotesk'; font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 8px; color: var(--text); }
   .page-sub{ color: var(--text-muted); font-size: 14px; max-width: 620px; line-height: 1.6; }
 
   .btn{
     display:inline-flex; align-items:center; gap:7px; padding: 9px 15px; border-radius: 8px; font-size: 13px; font-weight: 500;
-    border: 1px solid var(--line); color: var(--text-muted); background: transparent; cursor:pointer; transition: all .12s ease; font-family:'Inter';
+    border: 1px solid var(--line); color: var(--text-muted); background: var(--surface); cursor:pointer; transition: all .12s ease; font-family:'Inter';
   }
-  .btn:hover{ color: var(--text); border-color: rgba(255,255,255,0.22); background: var(--surface); }
-  .btn.primary{ background: var(--coral); color: #1a0c07; border-color: var(--coral); font-weight: 600; }
-  .btn.primary:hover{ background: #FF7452; }
-  .btn.ghost-emerald{ color: var(--emerald); border-color: rgba(52,211,153,0.35); }
+  .btn:hover{ color: var(--text); border-color: var(--text-dim); background: var(--surface-2); }
+  .btn.primary{ background: var(--coral); color: var(--coral-text); border-color: var(--coral); font-weight: 600; }
+  .btn.primary:hover{ background: #6A61CC; }
+  .btn.ghost-emerald{ color: var(--emerald); border-color: rgba(29,158,117,0.35); }
   .btn.ghost-emerald:hover{ background: var(--emerald-dim); }
 
   /* ---------- Toasts ---------- */
   .toast-stack{ position: fixed; bottom: 22px; right: 22px; display:flex; flex-direction:column; gap:8px; z-index: 100; }
   .toast{
-    background: var(--surface-2); border:1px solid var(--line); border-radius:9px; padding: 11px 16px;
-    font-size: 13px; color: var(--text); box-shadow: 0 8px 24px rgba(0,0,0,0.35); display:flex; align-items:center; gap:9px;
+    background: var(--surface); border:1px solid var(--line); border-radius:9px; padding: 11px 16px;
+    font-size: 13px; color: var(--text); box-shadow: 0 8px 24px rgba(24,22,31,0.1); display:flex; align-items:center; gap:9px;
     animation: toast-in .18s ease;
   }
   .toast::before{ content:''; width:6px; height:6px; border-radius:50%; background: var(--emerald); flex-shrink:0; }
@@ -134,10 +135,10 @@
   .metric-row{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
   .metric-card{ background: var(--surface); border:1px solid var(--line); border-radius: 12px; padding: 16px 17px; }
   .metric-label{ font-size: 12px; color: var(--text-muted); margin-bottom: 9px; }
-  .metric-value{ font-family:'Space Grotesk'; font-size: 21px; font-weight: 700; letter-spacing:-0.01em; }
+  .metric-value{ font-family:'Space Grotesk'; font-size: 21px; font-weight: 700; letter-spacing:-0.01em; color: var(--text); }
 
   .empty-state{ background: var(--surface); border: 1px dashed var(--line); border-radius: 14px; padding: 56px 40px; text-align:center; }
-  .empty-title{ font-family:'Space Grotesk'; font-size: 17px; font-weight:600; margin-bottom: 9px;}
+  .empty-title{ font-family:'Space Grotesk'; font-size: 17px; font-weight:600; margin-bottom: 9px; color: var(--text); }
   .empty-copy{ color: var(--text-muted); font-size: 13.5px; max-width: 440px; margin: 0 auto; line-height:1.6; }
   .feed-empty{ font-size: 12.5px; color: var(--text-dim); line-height:1.6; }
 
@@ -147,13 +148,20 @@
 
   .intent-badge{ font-size: 11px; font-weight:600; padding: 3px 9px; border-radius: 6px; display:inline-block; }
   .intent-very-high{ color: var(--rose); background: var(--rose-dim); }
-  .intent-high{ color: var(--coral); background: var(--coral-dim); }
+  .intent-high{ color: #3C3489; background: var(--coral-dim); }
   .intent-medium{ color: var(--amber); background: var(--amber-dim); }
   .intent-low{ color: var(--text-dim); background: var(--surface-2); }
 
   .status-chip{ font-size: 11px; font-weight:600; padding:3px 9px; border-radius:6px; }
   .status-abandoned{ color: var(--rose); background: var(--rose-dim); }
   .status-recovered{ color: var(--emerald); background: var(--emerald-dim); }
+
+  input[type="text"], input[type="number"], input[type="email"], input[type="tel"], textarea{
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px;
+    font-family: 'Inter'; font-size: 13px; color: var(--text); width: 100%;
+  }
+  input::placeholder, textarea::placeholder{ color: var(--text-dim); }
+  input:focus, textarea:focus{ outline: none; border-color: var(--coral); box-shadow: 0 0 0 3px var(--coral-dim); }
 
   @media (max-width: 880px){
     :root{ --sidebar-w: 0px; }
@@ -199,7 +207,7 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><line x1="5" y1="20" x2="5" y2="12"/><line x1="12" y1="20" x2="12" y2="6"/><line x1="19" y1="20" x2="19" y2="15"/></svg>
         Analytics
       </a>
-      <a href="/decisions" class="side-link {% if request.path == '/decisions' %}active{% endif %}">
+      <a href="{{ url_for('decisions_log') }}" class="side-link {% if request.path == url_for('decisions_log') %}active{% endif %}">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>
         AI Decisions
       </a>
@@ -227,10 +235,10 @@
     <div class="topbar">
       <div class="topbar-search">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="globalSearch" placeholder="Search customers or carts…">
+        <input type="text" id="globalSearch" placeholder="Search customers or carts&hellip;">
       </div>
       <div class="topbar-right">
-        <a href="/seed" class="btn" style="font-size:12px; padding:7px 12px;">↻ Load demo data</a>
+        <a href="/seed" class="btn" style="font-size:12px; padding:7px 12px;">&#8635; Load demo data</a>
         <a href="/add" class="btn primary" style="font-size:12px; padding:7px 13px;">+ New Cart</a>
         <div class="topbar-avatar">RS</div>
       </div>
@@ -250,12 +258,10 @@
   </div>
 
   <script>
-    // auto-dismiss flashed toasts
     document.querySelectorAll('.toast').forEach((el, i) => {
       setTimeout(() => { el.style.transition = 'opacity .25s ease'; el.style.opacity = '0'; setTimeout(() => el.remove(), 260); }, 3200 + i * 300);
     });
 
-    // lightweight client-side search across [data-search] rows/cards
     const searchInput = document.getElementById('globalSearch');
     if (searchInput) {
       searchInput.addEventListener('input', () => {
