@@ -294,6 +294,25 @@ app.jinja_env.filters["inr"] = format_inr
 # Routes
 # ---------------------------------------------------------------------------
 @app.route("/")
+def landing():
+    """Marketing home. Reuses the same scoring/stats engine as the app itself --
+    if a demo workspace is loaded, the hero numbers are real; otherwise we show
+    clearly-labeled sample figures instead of hardcoded marketing copy."""
+    conn = get_db()
+    carts = conn.execute("SELECT * FROM carts").fetchall()
+    conn.close()
+
+    live = bool(carts)
+    if live:
+        enriched = [enrich_cart(c) for c in carts]
+        stats = compute_stats(enriched)
+    else:
+        stats = None
+
+    return render_template("landing.html", stats=stats, live=live)
+
+
+@app.route("/dashboard")
 def dashboard():
     conn = get_db()
     carts = conn.execute("SELECT * FROM carts ORDER BY created_at DESC").fetchall()

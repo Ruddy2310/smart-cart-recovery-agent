@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartCart Recovery Agent — AI revenue recovery for abandoned carts</title>
+<meta name="description" content="An AI agent that decides who to contact, when to contact them, and what offer to send — turning abandoned checkouts into recovered revenue.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<noscript><style>.reveal{ opacity:1 !important; transform:none !important; }</style></noscript>
+<style>
+  :root{
+    --bg: #0B0F1A;
+    --surface: #131829;
+    --surface-2: #1A2036;
+    --surface-3: #212844;
+    --line: #242B45;
+    --line-soft: #1C2238;
+    --text: #F2F4FA;
+    --text-muted: #8993AF;
+    --text-dim: #5B6483;
+    --coral: #FF5D3A;
+    --coral-2: #FF7452;
+    --coral-dim: rgba(255,93,58,0.12);
+    --emerald: #34D399;
+    --emerald-dim: rgba(52,211,153,0.12);
+    --amber: #F5A623;
+    --amber-dim: rgba(245,166,35,0.12);
+    --rose: #FB5B7A;
+    --rose-dim: rgba(251,91,122,0.12);
+    --blue: #6E8BFF;
+    --blue-dim: rgba(110,139,255,0.12);
+    --radius-sm: 8px;
+    --radius: 14px;
+    --radius-lg: 20px;
+    --shadow-card: 0 24px 60px -28px rgba(0,0,0,0.65);
+    --content-w: 1180px;
+  }
+  *{ box-sizing: border-box; }
+  html{ scroll-behavior: smooth; }
+  html,body{ height:100%; }
+  body{
+    margin:0; background: var(--bg); color: var(--text);
+    font-family:'Inter', sans-serif; font-size:15px; line-height:1.5;
+    -webkit-font-smoothing: antialiased; overflow-x:hidden;
+  }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+  .display{ font-family:'Space Grotesk', sans-serif; }
+  a{ color:inherit; text-decoration:none; }
+  svg{ display:block; }
+  ::selection{ background: var(--coral); color:#1a0c07; }
+  a:focus-visible, button:focus-visible{ outline: 2px solid var(--coral); outline-offset: 3px; border-radius: 4px; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior:auto !important; }
+  }
+
+  .wrap{ max-width: var(--content-w); margin:0 auto; padding: 0 32px; }
+  section[id]{ scroll-margin-top: 88px; }
+
+  /* ---------------- Nav ---------------- */
+  .lp-nav{
+    position: fixed; top:0; left:0; right:0; z-index: 100;
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 18px 32px; transition: background .2s ease, border-color .2s ease, padding .2s ease;
+    border-bottom: 1px solid transparent;
+  }
+  .lp-nav.solid{
+    background: rgba(11,15,26,0.82); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line-soft); padding: 13px 32px;
+  }
+  .lp-brand{ display:flex; align-items:center; gap:10px; }
+  .lp-brand-mark{
+    width:30px; height:30px; border-radius:8px; background: var(--coral); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:700; font-size:13.5px; color:#1a0c07;
+  }
+  .lp-brand-name{ font-family:'Space Grotesk'; font-weight:600; font-size:13px; letter-spacing:-0.01em; line-height:1.28; }
+  .lp-brand-ai{ display:flex; align-items:center; gap:5px; font-family:'IBM Plex Mono'; font-size:10px; color: var(--text-dim); margin-top:2px; }
+  .lp-brand-ai .live-dot{ width:5px; height:5px; }
+  .lp-nav-links{ display:flex; align-items:center; gap:30px; }
+  .lp-nav-links a{ font-size:13px; color: var(--text-muted); transition: color .12s ease; }
+  .lp-nav-links a:hover{ color: var(--text); }
+  .lp-nav-actions{ display:flex; align-items:center; gap:10px; }
+  .lp-nav-toggle{ display:none; background:none; border:1px solid var(--line); border-radius:7px; width:36px; height:36px; color:var(--text); align-items:center; justify-content:center; cursor:pointer; }
+
+  /* ---------------- Buttons ---------------- */
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:7px; padding: 11px 19px; border-radius: 9px;
+    font-size: 13.5px; font-weight: 600; border: 1px solid var(--line); color: var(--text); background: var(--surface);
+    cursor:pointer; transition: all .14s ease; font-family:'Inter'; white-space:nowrap;
+  }
+  .btn:hover{ border-color: rgba(255,255,255,0.24); background: var(--surface-2); transform: translateY(-1px); }
+  .btn.primary{ background: var(--coral); color:#1a0c07; border-color: var(--coral); box-shadow: 0 10px 24px -10px rgba(255,93,58,0.55); }
+  .btn.primary:hover{ background: var(--coral-2); }
+  .btn.ghost{ background: transparent; color: var(--text-muted); }
+  .btn.ghost:hover{ color: var(--text); }
+  .btn.sm{ padding: 8px 14px; font-size: 12.5px; }
+
+  /* ---------------- Shared section chrome ---------------- */
+  section{ position: relative; }
+  .eyebrow{
+    font-family:'IBM Plex Mono'; font-size:11px; letter-spacing:0.14em; text-transform:uppercase;
+    color: var(--coral); display:flex; align-items:center; gap:9px; margin-bottom:14px;
+  }
+  .eyebrow::before{ content:''; width:16px; height:1px; background: var(--coral); }
+  .eyebrow.on-dark{ color: var(--text-muted); }
+  .eyebrow.on-dark::before{ background: var(--text-dim); }
+
+  .sec-head{ max-width: 640px; margin-bottom: 46px; }
+  .sec-title{ font-family:'Space Grotesk'; font-size: clamp(26px, 3.2vw, 38px); font-weight:700; letter-spacing:-0.02em; line-height:1.15; margin:0 0 14px; }
+  .sec-sub{ color: var(--text-muted); font-size:15px; line-height:1.65; }
+  .sec-head.center{ margin-left:auto; margin-right:auto; text-align:center; }
+
+  .reveal{ opacity:0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+
+  /* ================= HERO ================= */
+  .hero{ position:relative; padding: 168px 0 96px; overflow:hidden; }
+  .hero::before{
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:
+      radial-gradient(680px 420px at 82% 8%, rgba(255,93,58,0.10), transparent 60%),
+      linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size: auto, 46px 46px, 46px 46px;
+    background-position: 0 0, -1px -1px, -1px -1px;
+    -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  }
+  .hero-inner{ position:relative; z-index:1; display:grid; grid-template-columns: 1.05fr 0.95fr; gap: 56px; align-items:center; }
+  .live-chip{
+    display:inline-flex; align-items:center; gap:8px; font-family:'IBM Plex Mono'; font-size:11.5px;
+    color: var(--text-muted); background: var(--surface); border:1px solid var(--line); padding:6px 12px 6px 10px;
+    border-radius:20px; margin-bottom:22px;
+  }
+  .live-dot{ width:6px; height:6px; border-radius:50%; background: var(--emerald); box-shadow:0 0 0 3px var(--emerald-dim); flex-shrink:0; animation: pulse 2.2s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.45; } }
+
+  .hero h1{ font-family:'Space Grotesk'; font-size: clamp(34px, 4.6vw, 56px); font-weight:700; letter-spacing:-0.025em; line-height:1.08; margin:0 0 20px; }
+  .hero-sub{ font-size:16.5px; color: var(--text-muted); line-height:1.65; max-width:490px; margin-bottom:30px; }
+  .hero-cta{ display:flex; gap:12px; margin-bottom:38px; flex-wrap:wrap; }
+  .hero-cta .btn{ padding: 13px 22px; font-size:14px; }
+  .hero-trust{ display:flex; gap:26px; flex-wrap:wrap; }
+  .hero-trust-item{ font-size:12.5px; color: var(--text-dim); display:flex; align-items:center; gap:7px; }
+  .hero-trust-item svg{ color: var(--emerald); flex-shrink:0; }
+
+  /* Decision card (signature element) */
+  .hero-visual{ position:relative; display:flex; justify-content:center; }
+  .decision-card{
+    width:100%; max-width: 380px; background: var(--surface); border:1px solid var(--line); border-radius: var(--radius-lg);
+    padding: 22px 22px 20px; box-shadow: var(--shadow-card); transform: rotate(-1.6deg);
+    animation: float 7s ease-in-out infinite;
+  }
+  @keyframes float{ 0%,100%{ transform: rotate(-1.6deg) translateY(0); } 50%{ transform: rotate(-1.6deg) translateY(-10px); } }
+  .decision-card-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+  .decision-card-tag{ font-family:'IBM Plex Mono'; font-size:10px; letter-spacing:0.1em; color: var(--text-dim); display:flex; align-items:center; gap:7px; }
+  .decision-card-tag .live-dot{ animation: pulse 2.2s ease-in-out infinite; }
+  .decision-card-time{ font-family:'IBM Plex Mono'; font-size:10px; color: var(--text-dim); }
+
+  .decision-customer{ display:flex; align-items:center; gap:11px; margin-bottom:18px; }
+  .decision-avatar{ width:38px; height:38px; border-radius:10px; background: var(--surface-3); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:600; font-size:13px; flex-shrink:0; }
+  .decision-name{ font-weight:600; font-size:14.5px; }
+  .decision-cart{ font-size:12px; color: var(--text-dim); margin-top:1px; }
+  .decision-intent-badge{ margin-left:auto; font-size:10.5px; font-weight:700; color: var(--coral); background: var(--coral-dim); padding:4px 9px; border-radius:6px; letter-spacing:0.03em; }
+
+  .decision-row{ display:flex; align-items:center; justify-content:space-between; padding: 10px 0; border-top:1px solid var(--line-soft); font-size:12.5px; }
+  .decision-row .d-label{ color: var(--text-dim); }
+  .decision-row .d-value{ font-weight:600; }
+  .decision-prob-bar{ width:74px; height:5px; border-radius:4px; background: var(--surface-2); overflow:hidden; margin-right:8px; }
+  .decision-prob-fill{ height:100%; background: linear-gradient(90deg, var(--coral), var(--amber)); border-radius:4px; }
+  .decision-prob-wrap{ display:flex; align-items:center; }
+
+  .decision-rec{ margin-top:14px; background: var(--coral-dim); border:1px solid rgba(255,93,58,0.28); border-radius: 11px; padding: 13px 14px; }
+  .decision-rec-label{ font-family:'IBM Plex Mono'; font-size:9.5px; letter-spacing:0.09em; text-transform:uppercase; color: var(--coral); margin-bottom:6px; }
+  .decision-rec-value{ font-family:'Space Grotesk'; font-weight:700; font-size:14.5px; margin-bottom:4px; }
+  .decision-rec-expected{ font-size:12px; color: var(--text-muted); }
+  .decision-rec-expected b{ color: var(--emerald); font-weight:700; }
+
+  /* ================= METRICS STRIP ================= */
+  .metrics-strip{ padding: 40px 0 56px; border-bottom:1px solid var(--line-soft); }
+  .metrics-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+  .metric-item{ padding: 0 26px; border-left: 1px solid var(--line-soft); }
+  .metric-item:first-child{ border-left:none; padding-left:0; }
+  .metric-num{ font-family:'Space Grotesk'; font-size: clamp(28px, 3vw, 38px); font-weight:700; letter-spacing:-0.02em; }
+  .metric-label{ font-size: 13px; color: var(--text-muted); margin-top:6px; }
+  .data-tag{ display:inline-flex; align-items:center; gap:6px; font-family:'IBM Plex Mono'; font-size:10.5px; color: var(--text-dim); margin-top: 22px; }
+  .data-tag .dot{ width:5px; height:5px; border-radius:50%; background: var(--text-dim); }
+  .data-tag.live .dot{ background: var(--emerald); }
+  .data-tag.live{ color: var(--emerald); }
+
+  /* ================= PROBLEM ================= */
+  .problem{ padding: 100px 0; }
+  .problem-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items:center; }
+  .problem-visual{ background: var(--surface); border:1px solid var(--line); border-radius: var(--radius-lg); padding: 30px 30px 26px; }
+  .compare-row{ margin-bottom: 20px; }
+  .compare-row:last-child{ margin-bottom:0; }
+  .compare-label{ display:flex; justify-content:space-between; font-size:12.5px; color: var(--text-muted); margin-bottom:8px; }
+  .compare-label b{ color: var(--text); font-family:'Space Grotesk'; font-size:14px; }
+  .compare-track{ height:10px; border-radius:6px; background: var(--surface-2); overflow:hidden; }
+  .compare-fill{ height:100%; border-radius:6px; }
+  .compare-fill.recovered{ background: var(--emerald); }
+  .compare-fill.risk{ background: var(--rose); }
+  .risk-callout{ margin-top:26px; padding-top:24px; border-top:1px solid var(--line-soft); display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+  .risk-num{ font-family:'Space Grotesk'; font-size:34px; font-weight:700; color: var(--rose); letter-spacing:-0.02em; }
+  .risk-num-label{ font-size:13px; color: var(--text-muted); }
+
+  .problem-copy .funnel-line{ font-size:16px; color: var(--text-muted); padding: 9px 0 9px 20px; border-left: 2px solid var(--line); position:relative; }
+  .problem-copy .funnel-line::before{ content:''; position:absolute; left:-5px; top:50%; transform:translateY(-50%); width:8px; height:8px; border-radius:50%; background: var(--line); }
+  .problem-copy .funnel-line.last{ color: var(--rose); font-weight:600; border-left-color: var(--rose); }
+  .problem-copy .funnel-line.last::before{ background: var(--rose); }
+  .problem-conclusion{ margin-top: 24px; font-size: 16px; color: var(--text); line-height:1.6; }
+  .problem-conclusion b{ color: var(--coral); }
+
+  /* ================= HOW IT WORKS ================= */
+  .how{ padding: 100px 0; background: var(--surface); border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft); }
+  .how-steps{ display:grid; grid-template-columns: repeat(5, 1fr); gap: 0; position:relative; }
+  .how-step{ padding: 0 18px; position:relative; }
+  .how-step:first-child{ padding-left:0; }
+  .how-step:last-child{ padding-right:0; }
+  .how-connector{ position:absolute; top:19px; left:calc(-9px); width: calc(100% + 18px); height:1px; background: var(--line); z-index:0; }
+  .how-step:first-child .how-connector{ display:none; }
+  .how-num{ font-family:'Space Grotesk'; font-size:13px; font-weight:700; color: var(--bg); background: var(--coral); width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:18px; position:relative; z-index:1; }
+  .how-step:nth-child(2) .how-num,.how-step:nth-child(4) .how-num{ background:var(--surface-2); color:var(--text); border:1px solid var(--line); }
+  .how-step:nth-child(3) .how-num{ background: var(--surface-2); color: var(--text); border:1px solid var(--line); }
+  .how-step:nth-child(5) .how-num{ background: var(--emerald); color:#052e22; }
+  .how-title{ font-family:'Space Grotesk'; font-weight:700; font-size:16.5px; margin-bottom:8px; }
+  .how-desc{ font-size:13px; color: var(--text-muted); line-height:1.6; }
+
+  /* ================= DECISION DEEP-DIVE ================= */
+  .decision-deep{ padding: 110px 0; }
+  .deep-grid{ display:grid; grid-template-columns: 0.85fr 1.15fr; gap: 64px; align-items:center; }
+  .deep-title{ font-family:'Space Grotesk'; font-size: clamp(28px, 3.6vw, 44px); font-weight:700; letter-spacing:-0.02em; line-height:1.14; margin: 0 0 18px; }
+  .deep-copy{ color: var(--text-muted); font-size:15.5px; line-height:1.7; margin-bottom:28px; max-width:420px; }
+  .deep-list{ display:flex; flex-direction:column; gap:14px; }
+  .deep-list-item{ display:flex; gap:12px; align-items:flex-start; font-size:13.5px; color: var(--text-muted); }
+  .deep-list-item svg{ flex-shrink:0; margin-top:2px; color: var(--emerald); }
+
+  .full-decision-card{ background: var(--surface); border:1px solid var(--line); border-radius: var(--radius-lg); padding: 28px 28px 26px; box-shadow: var(--shadow-card); }
+  .fd-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; }
+  .fd-tag{ font-family:'IBM Plex Mono'; font-size:10.5px; letter-spacing:0.1em; color: var(--text-dim); display:flex; align-items:center; gap:8px; }
+  .fd-customer{ display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+  .fd-avatar{ width:44px; height:44px; border-radius:11px; background: var(--surface-3); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:600; font-size:14.5px; }
+  .fd-name{ font-weight:700; font-size:16px; }
+  .fd-sub{ font-size:12.5px; color: var(--text-dim); margin-top:2px; }
+  .fd-grid{ display:grid; grid-template-columns: repeat(4,1fr); gap:10px; margin-bottom:20px; }
+  .fd-metric{ background: var(--surface-2); border:1px solid var(--line); border-radius:10px; padding: 12px 13px; }
+  .fd-metric-label{ font-size:10.5px; color: var(--text-dim); margin-bottom:6px; }
+  .fd-metric-value{ font-family:'Space Grotesk'; font-weight:700; font-size:16px; }
+  .fd-why{ background: var(--surface-2); border:1px solid var(--line); border-radius:11px; padding:15px 16px; margin-bottom:20px; }
+  .fd-why-label{ font-family:'IBM Plex Mono'; font-size:9.5px; letter-spacing:0.1em; color: var(--text-dim); margin-bottom:8px; }
+  .fd-why-text{ font-size:13px; color:#D7DCEA; line-height:1.6; font-style:italic; }
+  .fd-rec{ background: var(--coral-dim); border:1px solid rgba(255,93,58,0.3); border-radius:11px; padding: 16px 17px; margin-bottom:18px; }
+  .fd-rec-label{ font-family:'IBM Plex Mono'; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color: var(--coral); margin-bottom:8px; }
+  .fd-rec-value{ font-family:'Space Grotesk'; font-weight:700; font-size:17px; margin-bottom:6px; }
+  .fd-rec-expected{ font-size:12.5px; color: var(--text-muted); }
+  .fd-rec-expected b{ color: var(--emerald); }
+  .fd-actions{ display:flex; gap:9px; }
+  .fd-note{ font-size:12px; color: var(--text-dim); margin-top:14px; text-align:center; min-height:16px; transition: opacity .2s ease; }
+
+  /* ================= RECOVERY SEQUENCE ================= */
+  .sequence{ padding: 110px 0; background: var(--surface); border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft); }
+  .seq-timeline{ max-width: 720px; margin: 0 auto; position:relative; padding-left: 34px; }
+  .seq-timeline::before{ content:''; position:absolute; left:9px; top:8px; bottom:8px; width:1px; background: linear-gradient(var(--line), var(--line-soft)); }
+  .seq-node{ position:relative; padding-bottom: 34px; }
+  .seq-node:last-child{ padding-bottom:0; }
+  .seq-dot{ position:absolute; left:-34px; top:2px; width:19px; height:19px; border-radius:50%; background: var(--bg); border:2px solid var(--coral); display:flex; align-items:center; justify-content:center; }
+  .seq-dot::after{ content:''; width:6px; height:6px; border-radius:50%; background: var(--coral); }
+  .seq-node.start .seq-dot, .seq-node.end .seq-dot{ border-color: var(--emerald); }
+  .seq-node.start .seq-dot::after, .seq-node.end .seq-dot::after{ background: var(--emerald); }
+  .seq-card{ background: var(--surface-2); border:1px solid var(--line); border-radius: 12px; padding: 15px 18px; }
+  .seq-time{ font-family:'IBM Plex Mono'; font-size:11px; color: var(--coral); margin-bottom:5px; }
+  .seq-node.start .seq-time, .seq-node.end .seq-time{ color: var(--emerald); }
+  .seq-title{ font-family:'Space Grotesk'; font-weight:600; font-size:15px; margin-bottom:4px; }
+  .seq-desc{ font-size:12.5px; color: var(--text-muted); line-height:1.55; }
+
+  /* ================= MULTI-CHANNEL ================= */
+  .channels{ padding: 110px 0; }
+  .channel-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .channel-card{ background: var(--surface); border:1px solid var(--line); border-radius: var(--radius); padding: 22px 20px; transition: border-color .15s ease, transform .15s ease; }
+  .channel-card:hover{ border-color: rgba(255,255,255,0.18); transform: translateY(-3px); }
+  .channel-icon{ width:38px; height:38px; border-radius:10px; background: var(--surface-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; margin-bottom:16px; color: var(--coral); }
+  .channel-name{ font-family:'Space Grotesk'; font-weight:700; font-size:15.5px; margin-bottom:14px; }
+  .channel-stat{ display:flex; justify-content:space-between; padding: 8px 0; border-top:1px solid var(--line-soft); font-size:12px; }
+  .channel-stat .cs-label{ color: var(--text-dim); }
+  .channel-stat .cs-value{ color: var(--text); font-weight:600; text-align:right; }
+  .channel-conv{ font-family:'Space Grotesk'; font-size:22px; font-weight:700; color: var(--emerald); }
+
+  /* ================= FEATURES ================= */
+  .features{ padding: 110px 0; background: var(--surface); border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft); }
+  .feature-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .feature-card{ background: var(--bg); border:1px solid var(--line); border-radius: var(--radius); padding: 20px; display:flex; flex-direction:column; }
+  .feature-demo{ height: 74px; display:flex; align-items:center; margin-bottom: 16px; }
+  .feature-title{ font-family:'Space Grotesk'; font-weight:700; font-size:14.5px; margin-bottom:6px; }
+  .feature-desc{ font-size:12px; color: var(--text-muted); line-height:1.55; }
+
+  /* mini feature demo widgets */
+  .fdemo-score{ width:100%; }
+  .fdemo-score-track{ height:8px; background: var(--surface-2); border-radius:5px; overflow:hidden; }
+  .fdemo-score-fill{ height:100%; width:92%; background: linear-gradient(90deg, var(--coral), var(--amber)); border-radius:5px; }
+  .fdemo-score-val{ font-family:'IBM Plex Mono'; font-size:11px; color: var(--text-dim); margin-top:8px; }
+
+  .fdemo-offer{ display:flex; align-items:center; gap:10px; }
+  .fdemo-offer-old{ font-family:'IBM Plex Mono'; font-size:15px; color: var(--text-dim); text-decoration: line-through; }
+  .fdemo-offer-arrow{ color: var(--text-dim); }
+  .fdemo-offer-new{ font-family:'Space Grotesk'; font-weight:700; font-size:19px; color: var(--emerald); }
+
+  .fdemo-timing{ display:flex; align-items:center; gap:7px; }
+  .fdemo-timing-dot{ width:9px; height:9px; border-radius:50%; background: var(--surface-2); border:1px solid var(--line); }
+  .fdemo-timing-dot.active{ background: var(--coral); border-color: var(--coral); box-shadow: 0 0 0 4px var(--coral-dim); }
+
+  .fdemo-multichannel{ display:flex; align-items:center; gap:6px; }
+  .fdemo-mc-chip{ width:26px; height:26px; border-radius:7px; background: var(--surface-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; color: var(--text-dim); }
+  .fdemo-mc-chip.active{ color: var(--coral); border-color: rgba(255,93,58,0.4); background: var(--coral-dim); }
+
+  .fdemo-spark{ width:100%; height:38px; }
+
+  .fdemo-segment{ width:100%; }
+  .fdemo-segment-track{ display:flex; height:10px; border-radius:5px; overflow:hidden; }
+
+  .fdemo-ab{ display:flex; align-items:flex-end; gap:10px; height:42px; }
+  .fdemo-ab-bar{ width:20px; border-radius: 4px 4px 0 0; }
+  .fdemo-ab-delta{ font-family:'IBM Plex Mono'; font-size:11px; color: var(--emerald); margin-left:4px; align-self:center; }
+
+  .fdemo-log{ width:100%; display:flex; flex-direction:column; gap:6px; }
+  .fdemo-log-row{ font-family:'IBM Plex Mono'; font-size:9.5px; color: var(--text-dim); display:flex; justify-content:space-between; background: var(--surface-2); padding:5px 8px; border-radius:5px; }
+  .fdemo-log-row span:last-child{ color: var(--text-muted); }
+
+  /* ================= LIVE FEED ================= */
+  .live-feed{ padding: 110px 0; }
+  .feed-shell{ background: var(--surface); border:1px solid var(--line); border-radius: var(--radius-lg); padding: 8px; max-width: 640px; margin: 0 auto; }
+  .feed-list{ display:flex; flex-direction:column; }
+  .feed-row{ display:flex; align-items:center; gap:14px; padding: 15px 18px; border-bottom: 1px solid var(--line-soft); transition: background .5s ease, opacity .4s ease, transform .4s ease; }
+  .feed-row:last-child{ border-bottom:none; }
+  .feed-row.enter{ opacity:0; transform: translateY(-8px); }
+  .feed-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .feed-dot.rose{ background: var(--rose); box-shadow:0 0 0 3px var(--rose-dim); }
+  .feed-dot.amber{ background: var(--amber); box-shadow:0 0 0 3px var(--amber-dim); }
+  .feed-dot.blue{ background: var(--blue); box-shadow:0 0 0 3px var(--blue-dim); }
+  .feed-dot.emerald{ background: var(--emerald); box-shadow:0 0 0 3px var(--emerald-dim); }
+  .feed-time{ font-family:'IBM Plex Mono'; font-size:11px; color: var(--text-dim); width:42px; flex-shrink:0; }
+  .feed-text{ font-size:13px; color: var(--text); flex:1; }
+  .feed-amt{ font-family:'IBM Plex Mono'; font-size:12.5px; color: var(--emerald); font-weight:600; flex-shrink:0; }
+
+  /* ================= ANALYTICS PREVIEW ================= */
+  .analytics-prev{ padding: 110px 0; background: var(--surface); border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft); }
+  .ap-grid{ display:grid; grid-template-columns: 1fr 1.2fr; gap: 50px; align-items:center; }
+  .ap-stat-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .ap-stat{ background: var(--bg); border:1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .ap-stat-label{ font-size:11.5px; color: var(--text-dim); margin-bottom:8px; }
+  .ap-stat-value{ font-family:'Space Grotesk'; font-weight:700; font-size:19px; }
+  .ap-chart-card{ background: var(--bg); border:1px solid var(--line); border-radius: var(--radius-lg); padding: 26px 26px 20px; }
+  .ap-chart-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom: 18px; }
+  .ap-chart-title{ font-family:'Space Grotesk'; font-weight:600; font-size:14px; }
+
+  /* ================= CASE STUDY ================= */
+  .case{ padding: 110px 0; }
+  .case-grid{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .case-card{ border-radius: var(--radius-lg); padding: 30px 26px; text-align:center; border:1px solid var(--line); }
+  .case-card.before{ background: var(--surface); }
+  .case-card.after{ background: var(--emerald-dim); border-color: rgba(52,211,153,0.3); }
+  .case-card.rate{ background: var(--surface); }
+  .case-label{ font-family:'IBM Plex Mono'; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color: var(--text-dim); margin-bottom:14px; }
+  .case-num{ font-family:'Space Grotesk'; font-size: 38px; font-weight:700; letter-spacing:-0.02em; }
+  .case-card.before .case-num{ color: var(--rose); }
+  .case-card.after .case-num{ color: var(--emerald); }
+  .case-sub{ font-size:12.5px; color: var(--text-muted); margin-top:10px; }
+
+  /* ================= TESTIMONIAL ================= */
+  .testimonial{ padding: 100px 0; }
+  .testimonial-card{
+    max-width: 760px; margin: 0 auto; background: var(--surface); border:1px solid var(--line);
+    border-radius: var(--radius-lg); padding: 44px 44px 34px; text-align:center;
+  }
+  .testimonial-tag{
+    display:inline-flex; align-items:center; gap:6px; font-family:'IBM Plex Mono'; font-size:10.5px;
+    letter-spacing:0.08em; text-transform:uppercase; color: var(--text-dim); background: var(--surface-2);
+    border:1px solid var(--line-soft); border-radius:100px; padding:5px 12px; margin-bottom:22px;
+  }
+  .testimonial-quote{ font-family:'Space Grotesk'; font-size: clamp(18px, 2.2vw, 23px); font-weight:600; line-height:1.5; letter-spacing:-0.01em; margin:0 0 26px; }
+  .testimonial-person{ display:flex; align-items:center; justify-content:center; gap:11px; }
+  .testimonial-avatar{ width:36px; height:36px; border-radius:50%; background: var(--coral-dim); color: var(--coral); display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:700; font-size:13px; }
+  .testimonial-meta{ text-align:left; }
+  .testimonial-name{ font-size:13.5px; font-weight:600; }
+  .testimonial-role{ font-size:12px; color: var(--text-dim); }
+
+  /* ================= PRICING ================= */
+  .pricing{ padding: 100px 0; }
+  .pricing-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 14px; align-items:stretch; }
+  .price-card{
+    background: var(--surface); border:1px solid var(--line); border-radius: var(--radius-lg);
+    padding: 28px 24px; display:flex; flex-direction:column; transition: transform .15s ease, border-color .15s ease;
+  }
+  .price-card:hover{ transform: translateY(-3px); border-color: rgba(255,255,255,0.18); }
+  .price-card.featured{ background: linear-gradient(180deg, var(--coral-dim), var(--surface) 55%); border-color: rgba(255,93,58,0.4); box-shadow: 0 24px 60px -30px rgba(255,93,58,0.35); position:relative; }
+  .price-badge{ position:absolute; top:-11px; left:24px; background: var(--coral); color:#1a0c07; font-family:'IBM Plex Mono'; font-size:10px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; padding:4px 10px; border-radius:100px; }
+  .price-name{ font-family:'Space Grotesk'; font-size:15px; font-weight:600; margin-bottom:6px; }
+  .price-desc{ font-size:12px; color: var(--text-muted); line-height:1.5; margin-bottom:18px; min-height:32px; }
+  .price-amount{ font-family:'Space Grotesk'; font-size:30px; font-weight:700; letter-spacing:-0.02em; }
+  .price-amount span{ font-size:12.5px; font-weight:500; color: var(--text-dim); }
+  .price-list{ list-style:none; margin: 20px 0 24px; padding:0; display:flex; flex-direction:column; gap:10px; flex:1; }
+  .price-list li{ display:flex; align-items:flex-start; gap:8px; font-size:12.5px; color: var(--text-muted); line-height:1.4; }
+  .price-list svg{ flex-shrink:0; margin-top:2px; color: var(--emerald); }
+  .price-card .btn{ width:100%; justify-content:center; }
+
+  @media (max-width: 900px){
+    .pricing-grid{ grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 620px){
+    .pricing-grid{ grid-template-columns: 1fr; }
+    .testimonial-card{ padding: 32px 24px; }
+  }
+
+  /* ================= FINAL CTA ================= */
+  .final-cta{ padding: 120px 0; text-align:center; }
+  .final-cta h2{ font-family:'Space Grotesk'; font-size: clamp(28px, 4vw, 44px); font-weight:700; letter-spacing:-0.02em; margin: 0 0 16px; }
+  .final-cta p{ color: var(--text-muted); font-size:16px; max-width:520px; margin: 0 auto 32px; line-height:1.6; }
+  .final-cta .btn{ padding:14px 28px; font-size:14.5px; }
+
+  /* ================= FOOTER ================= */
+  footer{ border-top:1px solid var(--line-soft); padding: 50px 0 34px; }
+  .footer-top{ display:flex; justify-content:space-between; gap:40px; margin-bottom: 40px; flex-wrap:wrap; }
+  .footer-brand-sub{ font-size:13px; color: var(--text-muted); max-width:280px; line-height:1.6; margin-top:12px; }
+  .footer-cols{ display:flex; gap:56px; flex-wrap:wrap; }
+  .footer-col-title{ font-family:'IBM Plex Mono'; font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color: var(--text-dim); margin-bottom:14px; }
+  .footer-col a{ display:block; font-size:13px; color: var(--text-muted); margin-bottom:10px; }
+  .footer-col a:hover{ color: var(--text); }
+  .footer-bottom{ display:flex; justify-content:space-between; align-items:center; padding-top: 24px; border-top:1px solid var(--line-soft); font-size:12px; color: var(--text-dim); flex-wrap:wrap; gap:10px; }
+
+  /* ================= RESPONSIVE ================= */
+  @media (max-width: 1080px){
+    .wrap{ padding: 0 24px; }
+    .hero{ padding-top: 148px; }
+    .hero-inner{ grid-template-columns: 1fr; gap:52px; }
+    .hero-visual{ order:-1; }
+    .problem-grid{ grid-template-columns: 1fr; gap:40px; }
+    .deep-grid{ grid-template-columns: 1fr; gap:40px; }
+    .deep-grid .decision-deep-copy{ order:1; }
+    .channel-grid{ grid-template-columns: repeat(2, 1fr); }
+    .feature-grid{ grid-template-columns: repeat(2, 1fr); }
+    .ap-grid{ grid-template-columns: 1fr; gap:36px; }
+    .case-grid{ grid-template-columns: 1fr; }
+    .metrics-grid{ grid-template-columns: repeat(2, 1fr); row-gap: 26px; }
+    .metric-item:nth-child(3){ border-left:none; }
+  }
+  @media (max-width: 720px){
+    .lp-nav-links{ display:none; }
+    .lp-nav-toggle{ display:flex; }
+    .lp-nav-actions .btn.ghost{ display:none; }
+    .how-steps{ grid-template-columns: 1fr; row-gap: 26px; }
+    .how-connector{ display:none; }
+    .how-step{ padding:0; }
+    .metrics-grid{ grid-template-columns: 1fr 1fr; }
+    section{ padding-left:0; }
+    .hero, .problem, .how, .decision-deep, .sequence, .channels, .features, .live-feed, .analytics-prev, .case, .testimonial, .pricing, .final-cta{ padding-top: 72px; padding-bottom: 72px; }
+    .footer-top{ flex-direction:column; }
+  }
+</style>
+</head>
+<body>
+
+  <nav class="lp-nav" id="lpNav">
+    <a class="lp-brand" href="#top">
+      <div class="lp-brand-mark">S</div>
+      <div>
+        <div class="lp-brand-name">SmartCart<br>Recovery Agent</div>
+        <div class="lp-brand-ai"><span class="live-dot"></span> AI Agent</div>
+      </div>
+    </a>
+    <div class="lp-nav-links">
+      <a href="#how-it-works">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#analytics">Analytics</a>
+      <a href="#pricing">Pricing</a>
+      <a href="{{ url_for('decisions_log') }}">AI Decisions</a>
+    </div>
+    <div class="lp-nav-actions">
+      <a href="{{ url_for('settings') }}" class="btn ghost sm nav-signin">Sign in</a>
+      <a href="{{ url_for('dashboard') }}" class="btn ghost sm">View Demo</a>
+      <a href="{{ url_for('seed_demo_data') }}" class="btn primary sm">Start Recovery</a>
+    </div>
+    <button class="lp-nav-toggle" id="navToggle" aria-label="Menu">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+  </nav>
+
+  <!-- ================= HERO ================= -->
+  <section class="hero" id="top">
+    <div class="wrap">
+      <div class="hero-inner">
+        <div>
+          <div class="live-chip"><span class="live-dot"></span> AI Recovery Agent Online</div>
+          <h1 class="reveal in">AI-powered revenue recovery for abandoned carts.</h1>
+          <p class="hero-sub reveal in">Turn abandoned checkouts into recovered revenue with an AI agent that decides who to contact, when to contact them, and what offer to send.</p>
+          <div class="hero-cta">
+            <a href="{{ url_for('seed_demo_data') }}" class="btn primary">Start Recovery</a>
+            <a href="{{ url_for('dashboard') }}" class="btn ghost">View Demo →</a>
+          </div>
+          <div class="hero-trust">
+            <div class="hero-trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg> Every decision is logged &amp; auditable</div>
+            <div class="hero-trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg> No blanket discounts</div>
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="decision-card">
+            <div class="decision-card-head">
+              <div class="decision-card-tag"><span class="live-dot"></span> AI RECOVERY DECISION</div>
+              <div class="decision-card-time">just now</div>
+            </div>
+            <div class="decision-customer">
+              <div class="decision-avatar">AM</div>
+              <div>
+                <div class="decision-name">Aarav Mehta</div>
+                <div class="decision-cart">₹8,490 cart</div>
+              </div>
+              <div class="decision-intent-badge">HIGH INTENT</div>
+            </div>
+            <div class="decision-row">
+              <span class="d-label">Recovery probability</span>
+              <span class="decision-prob-wrap"><span class="decision-prob-bar"><span class="decision-prob-fill" style="width:82%"></span></span><span class="d-value">82%</span></span>
+            </div>
+            <div class="decision-row">
+              <span class="d-label">Recommended channel</span>
+              <span class="d-value">WhatsApp</span>
+            </div>
+            <div class="decision-rec">
+              <div class="decision-rec-label">Agent recommendation</div>
+              <div class="decision-rec-value">WhatsApp + 10% offer</div>
+              <div class="decision-rec-expected">Expected recovery <b>₹6,960</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= METRICS STRIP ================= -->
+  <section class="metrics-strip">
+    <div class="wrap">
+      <div class="metrics-grid">
+        {% if live %}
+        <div class="metric-item reveal"><div class="metric-num" data-count="{{ stats.recovered_value }}" data-format="inr">{{ stats.recovered_value|inr }}</div><div class="metric-label">Revenue recovered</div></div>
+        <div class="metric-item reveal"><div class="metric-num" data-count="{{ stats.total_carts }}">{{ stats.total_carts }}</div><div class="metric-label">Carts analyzed</div></div>
+        <div class="metric-item reveal"><div class="metric-num" data-count="{{ stats.recovery_rate }}" data-suffix="%">{{ stats.recovery_rate }}%</div><div class="metric-label">Recovery rate</div></div>
+        <div class="metric-item reveal"><div class="metric-num" data-count="{{ stats.avg_recovery_value }}" data-format="inr">{{ stats.avg_recovery_value|inr }}</div><div class="metric-label">Average recovered order</div></div>
+        {% else %}
+        <div class="metric-item reveal"><div class="metric-num" data-count="284000" data-format="inr">₹2.84L</div><div class="metric-label">Revenue recovered</div></div>
+        <div class="metric-item reveal"><div class="metric-num" data-count="1284">1,284</div><div class="metric-label">Carts analyzed</div></div>
+        <div class="metric-item reveal"><div class="metric-num" data-count="42.6" data-suffix="%">42.6%</div><div class="metric-label">Recovery rate</div></div>
+        <div class="metric-item reveal"><div class="metric-num" data-count="3184" data-format="inr">₹3.2k</div><div class="metric-label">Average recovered order</div></div>
+        {% endif %}
+      </div>
+      {% if live %}
+      <div class="data-tag live"><span class="dot"></span> Live from your workspace</div>
+      {% else %}
+      <div class="data-tag"><span class="dot"></span> Sample workspace data — <a href="{{ url_for('seed_demo_data') }}" style="color:var(--coral); text-decoration:underline;">load the demo</a> to see your own numbers</div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- ================= PROBLEM ================= -->
+  <section class="problem" id="problem">
+    <div class="wrap">
+      <div class="problem-grid">
+        <div class="problem-copy">
+          <div class="eyebrow">The cost of silence</div>
+          <h2 class="sec-title reveal">Your abandoned carts are already costing you money.</h2>
+          <div style="margin: 30px 0;">
+            <div class="funnel-line reveal">Customers browse.</div>
+            <div class="funnel-line reveal">Customers add to cart.</div>
+            <div class="funnel-line reveal">Customers reach checkout.</div>
+            <div class="funnel-line last reveal">Then they disappear.</div>
+          </div>
+          <p class="problem-conclusion reveal">The AI agent exists to recover that lost intent — <b>before it becomes a write-off.</b></p>
+        </div>
+
+        <div class="problem-visual reveal">
+          <div class="compare-row">
+            <div class="compare-label"><span>Revenue recovered</span> <b>{% if live %}{{ stats.recovered_value|inr }}{% else %}₹7.1L{% endif %}</b></div>
+            <div class="compare-track"><div class="compare-fill recovered" style="width:100%"></div></div>
+          </div>
+          <div class="compare-row">
+            <div class="compare-label"><span>Revenue at risk</span> <b>{% if live %}{{ stats.recoverable_value|inr }}{% else %}₹4.7L{% endif %}</b></div>
+            <div class="compare-track"><div class="compare-fill risk" style="width:{% if live and stats.recovered_value %}{{ [((stats.recoverable_value / (stats.recovered_value + 1)) * 100)|round(0, 'floor'), 100]|min }}{% else %}66{% endif %}%"></div></div>
+          </div>
+          <div class="risk-callout">
+            <div class="risk-num">{% if live %}{{ stats.recoverable_value|inr }}{% else %}₹4.7L{% endif %}</div>
+            <div class="risk-num-label">sitting in abandoned carts right now,<br>waiting for a decision.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= HOW IT WORKS ================= -->
+  <section class="how" id="how-it-works">
+    <div class="wrap">
+      <div class="sec-head center" style="margin-left:auto; margin-right:auto;">
+        <div class="eyebrow on-dark" style="justify-content:center;">How the agent works</div>
+        <h2 class="sec-title reveal">Recovery that thinks before it sends.</h2>
+      </div>
+      <div class="how-steps">
+        <div class="how-step reveal">
+          <div class="how-connector"></div>
+          <div class="how-num">01</div>
+          <div class="how-title">Detect</div>
+          <div class="how-desc">Abandoned cart detected the moment a customer leaves checkout.</div>
+        </div>
+        <div class="how-step reveal">
+          <div class="how-connector"></div>
+          <div class="how-num">02</div>
+          <div class="how-title">Understand</div>
+          <div class="how-desc">AI analyzes purchase intent, cart value and customer behavior.</div>
+        </div>
+        <div class="how-step reveal">
+          <div class="how-connector"></div>
+          <div class="how-num">03</div>
+          <div class="how-title">Prioritize</div>
+          <div class="how-desc">Agent ranks the customer by recovery probability against the rest of the queue.</div>
+        </div>
+        <div class="how-step reveal">
+          <div class="how-connector"></div>
+          <div class="how-num">04</div>
+          <div class="how-title">Decide</div>
+          <div class="how-desc">Agent chooses the channel, timing and offer with the best expected return.</div>
+        </div>
+        <div class="how-step reveal">
+          <div class="how-connector"></div>
+          <div class="how-num">05</div>
+          <div class="how-title">Recover</div>
+          <div class="how-desc">Customer returns and completes checkout — the loop closes and logs the outcome.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DECISION DEEP-DIVE ================= -->
+  <section class="decision-deep">
+    <div class="wrap">
+      <div class="deep-grid">
+        <div class="decision-deep-copy">
+          <div class="eyebrow">The core of the product</div>
+          <h2 class="deep-title reveal">Every cart gets a decision.</h2>
+          <p class="deep-copy reveal">No blanket discounts. No one-size-fits-all blasts. Every abandoned cart is scored on its own signals, and the agent attaches its reasoning to every recommendation — so a human can approve, edit, or override it.</p>
+          <div class="deep-list reveal">
+            <div class="deep-list-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg> Scored on cart value, intent and idle time</div>
+            <div class="deep-list-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg> Channel and offer depth chosen per customer</div>
+            <div class="deep-list-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg> Business reasoning attached — never a black box</div>
+          </div>
+        </div>
+
+        <div class="full-decision-card reveal">
+          <div class="fd-head">
+            <div class="fd-tag"><span class="live-dot"></span> AI RECOVERY DECISION</div>
+            <span class="mono" style="font-size:10.5px; color:var(--text-dim);">Cart #4471</span>
+          </div>
+          <div class="fd-customer">
+            <div class="fd-avatar">AM</div>
+            <div>
+              <div class="fd-name">Aarav Mehta</div>
+              <div class="fd-sub">Cart ₹8,490 · Idle 42 minutes</div>
+            </div>
+          </div>
+          <div class="fd-grid">
+            <div class="fd-metric"><div class="fd-metric-label">Intent</div><div class="fd-metric-value">92 / 100</div></div>
+            <div class="fd-metric"><div class="fd-metric-label">Time idle</div><div class="fd-metric-value">42m</div></div>
+            <div class="fd-metric"><div class="fd-metric-label">Recovery prob.</div><div class="fd-metric-value">82%</div></div>
+            <div class="fd-metric"><div class="fd-metric-label">Offer</div><div class="fd-metric-value">10%</div></div>
+          </div>
+          <div class="fd-why">
+            <div class="fd-why-label">WHY?</div>
+            <div class="fd-why-text">"High checkout intent combined with recent activity makes immediate outreach the highest-value action."</div>
+          </div>
+          <div class="fd-rec">
+            <div class="fd-rec-label">Recommended action</div>
+            <div class="fd-rec-value">WhatsApp + 10% personalized discount</div>
+            <div class="fd-rec-expected">Expected recovery <b>₹6,960</b></div>
+          </div>
+          <div class="fd-actions">
+            <button class="btn primary sm" style="flex:1;" onclick="fdAction(this, 'approve')">Approve</button>
+            <button class="btn sm" style="flex:1;" onclick="fdAction(this, 'edit')">Edit</button>
+            <button class="btn ghost sm" style="flex:1;" onclick="fdAction(this, 'dismiss')">Dismiss</button>
+          </div>
+          <div class="fd-note" id="fdNote"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= RECOVERY SEQUENCE ================= -->
+  <section class="sequence">
+    <div class="wrap">
+      <div class="sec-head center">
+        <div class="eyebrow on-dark" style="justify-content:center;">One journey, five decisions</div>
+        <h2 class="sec-title reveal">One cart. One intelligent recovery journey.</h2>
+      </div>
+
+      <div class="seq-timeline">
+        <div class="seq-node start reveal">
+          <div class="seq-dot"></div>
+          <div class="seq-card"><div class="seq-time">T+0</div><div class="seq-title">Cart abandoned</div><div class="seq-desc">Customer leaves checkout with items still in cart.</div></div>
+        </div>
+        <div class="seq-node reveal">
+          <div class="seq-dot"></div>
+          <div class="seq-card"><div class="seq-time">+5 MIN</div><div class="seq-title">AI analyzes intent</div><div class="seq-desc">Cart value, browsing behavior and purchase history are scored.</div></div>
+        </div>
+        <div class="seq-node reveal">
+          <div class="seq-dot"></div>
+          <div class="seq-card"><div class="seq-time">+1 HOUR</div><div class="seq-title">Gentle reminder</div><div class="seq-desc">A low-pressure nudge goes out on the highest-converting channel.</div></div>
+        </div>
+        <div class="seq-node reveal">
+          <div class="seq-dot"></div>
+          <div class="seq-card"><div class="seq-time">+8 HOURS</div><div class="seq-title">Personalized follow-up</div><div class="seq-desc">Message adapts to what the customer viewed and how long they browsed.</div></div>
+        </div>
+        <div class="seq-node reveal">
+          <div class="seq-dot"></div>
+          <div class="seq-card"><div class="seq-time">+24 HOURS</div><div class="seq-title">Offer optimization</div><div class="seq-desc">Discount depth adjusts based on predicted recovery probability.</div></div>
+        </div>
+        <div class="seq-node end reveal">
+          <div class="seq-dot"></div>
+          <div class="seq-card"><div class="seq-time">+72 HOURS</div><div class="seq-title">Final recovery attempt</div><div class="seq-desc">Last, highest-incentive touch before the cart is marked lost.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MULTI-CHANNEL ================= -->
+  <section class="channels" id="channels">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">Every channel, one brain</div>
+        <h2 class="sec-title reveal">One agent. Every recovery channel.</h2>
+        <p class="sec-sub reveal">The agent chooses the channel most likely to convert instead of sending the same message to everyone.</p>
+      </div>
+      <div class="channel-grid">
+        <div class="channel-card reveal">
+          <div class="channel-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></div>
+          <div class="channel-name">WhatsApp</div>
+          <div class="channel-conv">38%</div>
+          <div class="channel-stat"><span class="cs-label">Best audience</span><span class="cs-value">High-intent repeat buyers</span></div>
+          <div class="channel-stat"><span class="cs-label">Best timing</span><span class="cs-value">Within 1 hour</span></div>
+        </div>
+        <div class="channel-card reveal">
+          <div class="channel-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M4 6l8 7 8-7"/></svg></div>
+          <div class="channel-name">Email</div>
+          <div class="channel-conv">22%</div>
+          <div class="channel-stat"><span class="cs-label">Best audience</span><span class="cs-value">First-time, mid-intent</span></div>
+          <div class="channel-stat"><span class="cs-label">Best timing</span><span class="cs-value">6–8 hours</span></div>
+        </div>
+        <div class="channel-card reveal">
+          <div class="channel-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="10" y1="18" x2="14" y2="18"/></svg></div>
+          <div class="channel-name">SMS</div>
+          <div class="channel-conv">27%</div>
+          <div class="channel-stat"><span class="cs-label">Best audience</span><span class="cs-value">High cart value, mobile</span></div>
+          <div class="channel-stat"><span class="cs-label">Best timing</span><span class="cs-value">30–60 minutes</span></div>
+        </div>
+        <div class="channel-card reveal">
+          <div class="channel-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13.7 21a2 2 0 01-3.4 0"/><path d="M18 8a6 6 0 10-12 0c0 6.5-3 8-3 8h18s-3-1.5-3-8"/></svg></div>
+          <div class="channel-name">Push</div>
+          <div class="channel-conv">18%</div>
+          <div class="channel-stat"><span class="cs-label">Best audience</span><span class="cs-value">App users, saved payment</span></div>
+          <div class="channel-stat"><span class="cs-label">Best timing</span><span class="cs-value">Within 15 minutes</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FEATURES ================= -->
+  <section class="features" id="features">
+    <div class="wrap">
+      <div class="sec-head center">
+        <div class="eyebrow on-dark" style="justify-content:center;">What's under the hood</div>
+        <h2 class="sec-title reveal">Built for revenue teams, not just marketers.</h2>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-card reveal">
+          <div class="feature-demo fdemo-score"><div style="width:100%;"><div class="fdemo-score-track"><div class="fdemo-score-fill"></div></div><div class="fdemo-score-val">92 / 100 intent</div></div></div>
+          <div class="feature-title">AI Intent Scoring</div>
+          <div class="feature-desc">Every cart is scored on value, behavior and history — not treated equally.</div>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-demo fdemo-offer"><span class="fdemo-offer-old">15%</span><span class="fdemo-offer-arrow">→</span><span class="fdemo-offer-new">10%</span></div>
+          <div class="feature-title">Dynamic Offer Selection</div>
+          <div class="feature-desc">Discount depth adjusts in real time as recovery probability changes.</div>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-demo fdemo-timing">
+            <div class="fdemo-timing-dot"></div><div class="fdemo-timing-dot"></div><div class="fdemo-timing-dot active"></div><div class="fdemo-timing-dot"></div><div class="fdemo-timing-dot"></div>
+          </div>
+          <div class="feature-title">Smart Timing</div>
+          <div class="feature-desc">The agent picks the send window most likely to catch attention.</div>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-demo fdemo-multichannel">
+            <div class="fdemo-mc-chip active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></div>
+            <div class="fdemo-mc-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M4 6l8 7 8-7"/></svg></div>
+            <div class="fdemo-mc-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="2" width="12" height="20" rx="2"/></svg></div>
+            <svg width="14" height="10" viewBox="0 0 24 24" style="color:var(--text-dim); margin:0 2px;"><line x1="0" y1="5" x2="24" y2="5" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 3"/></svg>
+            <div class="fdemo-mc-chip active" style="color:var(--emerald); border-color: rgba(52,211,153,0.4); background: var(--emerald-dim);">AI</div>
+          </div>
+          <div class="feature-title">Multi-Channel Recovery</div>
+          <div class="feature-desc">One decision engine, routed to whichever channel converts best.</div>
+        </div>
+        <div class="feature-card reveal">
+          <svg class="feature-demo fdemo-spark" viewBox="0 0 200 40" preserveAspectRatio="none"><polyline points="0,32 30,26 60,28 90,14 120,18 150,6 180,10 200,2" fill="none" stroke="var(--emerald)" stroke-width="2.5"/></svg>
+          <div class="feature-title">Recovery Analytics</div>
+          <div class="feature-desc">Track recovered revenue, rate and channel performance over time.</div>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-demo fdemo-segment">
+            <div class="fdemo-segment-track">
+              <div style="width:38%; background:var(--rose);"></div>
+              <div style="width:34%; background:var(--coral);"></div>
+              <div style="width:28%; background:var(--surface-2);"></div>
+            </div>
+            <div class="fdemo-score-val">Very high · High · Medium</div>
+          </div>
+          <div class="feature-title">Customer Segmentation</div>
+          <div class="feature-desc">Carts are grouped by intent tier so you see where value concentrates.</div>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-demo fdemo-ab">
+            <div class="fdemo-ab-bar" style="height:55%; background:var(--surface-2);"></div>
+            <div class="fdemo-ab-bar" style="height:88%; background:var(--emerald);"></div>
+            <span class="fdemo-ab-delta">+18%</span>
+          </div>
+          <div class="feature-title">A/B Testing</div>
+          <div class="feature-desc">Test offer depth and messaging, and let the agent favor the winner.</div>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-demo fdemo-log">
+            <div class="fdemo-log-row"><span>14:02</span><span>WhatsApp + 10%</span></div>
+            <div class="fdemo-log-row"><span>13:47</span><span>Email queued</span></div>
+            <div class="fdemo-log-row"><span>13:31</span><span>Recovered ₹4,290</span></div>
+          </div>
+          <div class="feature-title">AI Decision Log</div>
+          <div class="feature-desc">Every action, timestamped with the reason — so a human can audit it.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= LIVE FEED ================= -->
+  <section class="live-feed">
+    <div class="wrap">
+      <div class="sec-head center">
+        <div class="eyebrow" style="justify-content:center;">Always on</div>
+        <h2 class="sec-title reveal">Your recovery engine is always working.</h2>
+      </div>
+      <div class="feed-shell reveal">
+        <div class="feed-list" id="feedList">
+          <div class="feed-row"><span class="feed-dot rose"></span><span class="feed-time">12:41</span><span class="feed-text">High-intent cart detected</span><span class="feed-amt">₹8,490</span></div>
+          <div class="feed-row"><span class="feed-dot amber"></span><span class="feed-time">12:38</span><span class="feed-text">AI changed offer — 15% → 10%</span></div>
+          <div class="feed-row"><span class="feed-dot blue"></span><span class="feed-time">12:34</span><span class="feed-text">WhatsApp recovery sent</span></div>
+          <div class="feed-row"><span class="feed-dot emerald"></span><span class="feed-time">12:29</span><span class="feed-text">Cart recovered</span><span class="feed-amt">₹4,290</span></div>
+          <div class="feed-row"><span class="feed-dot blue"></span><span class="feed-time">12:21</span><span class="feed-text">Customer returned to checkout</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ANALYTICS PREVIEW ================= -->
+  <section class="analytics-prev" id="analytics">
+    <div class="wrap">
+      <div class="ap-grid">
+        <div>
+          <div class="eyebrow on-dark">See the numbers</div>
+          <h2 class="sec-title reveal">Know exactly what you're recovering.</h2>
+          <div class="ap-stat-grid reveal" style="margin-top:26px;">
+            <div class="ap-stat"><div class="ap-stat-label">Revenue recovered</div><div class="ap-stat-value" style="color:var(--emerald);">{% if live %}{{ stats.recovered_value|inr }}{% else %}₹2.84L{% endif %}</div></div>
+            <div class="ap-stat"><div class="ap-stat-label">Recovery rate</div><div class="ap-stat-value">{% if live %}{{ stats.recovery_rate }}%{% else %}42.6%{% endif %}</div></div>
+            <div class="ap-stat"><div class="ap-stat-label">Revenue at risk</div><div class="ap-stat-value" style="color:var(--rose);">{% if live %}{{ stats.recoverable_value|inr }}{% else %}₹4.7L{% endif %}</div></div>
+            <div class="ap-stat"><div class="ap-stat-label">Best channel</div><div class="ap-stat-value">WhatsApp</div></div>
+          </div>
+        </div>
+
+        <div class="ap-chart-card reveal">
+          <div class="ap-chart-head">
+            <div class="ap-chart-title">Revenue recovered — last 7 days</div>
+            <span class="mono" style="font-size:11px; color:var(--text-dim);">sample trend</span>
+          </div>
+          <svg width="100%" height="140" viewBox="0 0 480 140" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#34D399" stop-opacity="0.28"/>
+                <stop offset="100%" stop-color="#34D399" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,108 L68,96 L136,100 L204,70 L272,78 L340,44 L408,54 L480,18 L480,140 L0,140 Z" fill="url(#areaFill)"/>
+            <polyline points="0,108 68,96 136,100 204,70 272,78 340,44 408,54 480,18" fill="none" stroke="var(--emerald)" stroke-width="2.5"/>
+          </svg>
+          <div style="display:flex; justify-content:space-between; margin-top:8px;">
+            {% for d in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}<span class="mono" style="font-size:10.5px; color:var(--text-dim);">{{ d }}</span>{% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CASE STUDY ================= -->
+  <section class="case">
+    <div class="wrap">
+      <div class="sec-head center">
+        <div class="eyebrow" style="justify-content:center;">Sample workspace results</div>
+        <h2 class="sec-title reveal">What one recovery cycle looks like.</h2>
+        <p class="sec-sub reveal">Illustrative numbers from a seeded demo workspace — not a real customer or company.</p>
+      </div>
+      <div class="case-grid">
+        <div class="case-card before reveal">
+          <div class="case-label">Before AI Recovery</div>
+          <div class="case-num">₹4.7L</div>
+          <div class="case-sub">Revenue at risk</div>
+        </div>
+        <div class="case-card after reveal">
+          <div class="case-label">After AI Recovery</div>
+          <div class="case-num">₹1.21L</div>
+          <div class="case-sub">Recovered</div>
+        </div>
+        <div class="case-card rate reveal">
+          <div class="case-label">Recovery rate</div>
+          <div class="case-num" style="color:var(--coral);">42.6%</div>
+          <div class="case-sub">Of at-risk revenue recovered</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TESTIMONIAL ================= -->
+  <section class="testimonial">
+    <div class="wrap">
+      <div class="testimonial-card reveal">
+        <div class="testimonial-tag">Demo customer feedback</div>
+        <p class="testimonial-quote">"Instead of manually deciding which abandoned carts deserve attention, the agent gives our team a prioritized recovery queue — with the reasoning attached, not just a score."</p>
+        <div class="testimonial-person">
+          <div class="testimonial-avatar">RS</div>
+          <div class="testimonial-meta">
+            <div class="testimonial-name">Rudra Soni</div>
+            <div class="testimonial-role">Founder, demo workspace</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PRICING ================= -->
+  <section class="pricing" id="pricing">
+    <div class="wrap">
+      <div class="sec-head center">
+        <div class="eyebrow" style="justify-content:center;">Pricing</div>
+        <h2 class="sec-title reveal">Start free. Scale when revenue does.</h2>
+        <p class="sec-sub reveal">Every plan includes the same decision engine — limits scale with your cart volume.</p>
+      </div>
+      <div class="pricing-grid">
+        <div class="price-card reveal">
+          <div class="price-name">Free</div>
+          <div class="price-desc">Try the agent on a small, live cart volume.</div>
+          <div class="price-amount">₹0<span>/mo</span></div>
+          <ul class="price-list">
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Up to 50 carts / mo</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>1 recovery channel</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Basic analytics</li>
+          </ul>
+          <a href="{{ url_for('seed_demo_data') }}" class="btn ghost sm">Start free</a>
+        </div>
+        <div class="price-card reveal">
+          <div class="price-name">Starter</div>
+          <div class="price-desc">For stores just switching on recovery.</div>
+          <div class="price-amount">₹2,499<span>/mo</span></div>
+          <ul class="price-list">
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Up to 1,000 carts / mo</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>WhatsApp + Email</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Decision log access</li>
+          </ul>
+          <a href="{{ url_for('seed_demo_data') }}" class="btn ghost sm">Choose Starter</a>
+        </div>
+        <div class="price-card featured reveal">
+          <div class="price-badge">Most popular</div>
+          <div class="price-name">Growth</div>
+          <div class="price-desc">For teams actively recovering revenue at scale.</div>
+          <div class="price-amount">₹7,999<span>/mo</span></div>
+          <ul class="price-list">
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Up to 10,000 carts / mo</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>All channels + AI timing</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Customer segmentation</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Full analytics + A/B tests</li>
+          </ul>
+          <a href="{{ url_for('seed_demo_data') }}" class="btn primary sm">Choose Growth</a>
+        </div>
+        <div class="price-card reveal">
+          <div class="price-name">Scale</div>
+          <div class="price-desc">High-volume stores with dedicated support.</div>
+          <div class="price-amount">Custom</div>
+          <ul class="price-list">
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Unlimited carts</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Custom integrations</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Dedicated success manager</li>
+          </ul>
+          <a href="{{ url_for('settings') }}" class="btn ghost sm">Talk to us</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FINAL CTA ================= -->
+  <section class="final-cta">
+    <div class="wrap">
+      <h2 class="reveal">Stop losing carts to silence.</h2>
+      <p class="reveal">Load a live workspace and watch the agent prioritize, decide and act — in real time.</p>
+      <a href="{{ url_for('seed_demo_data') }}" class="btn primary reveal">Start Recovery</a>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div class="footer-top">
+        <div>
+          <a class="lp-brand" href="#top">
+            <div class="lp-brand-mark">S</div>
+            <div>
+              <div class="lp-brand-name">SmartCart<br>Recovery Agent</div>
+            </div>
+          </a>
+          <p class="footer-brand-sub">An AI agent that decides who to contact, when, and with what offer — so abandoned carts turn back into revenue.</p>
+        </div>
+        <div class="footer-cols">
+          <div class="footer-col">
+            <div class="footer-col-title">Product</div>
+            <a href="#how-it-works">How it works</a>
+            <a href="#features">Features</a>
+            <a href="#channels">Channels</a>
+            <a href="#analytics">Analytics</a>
+          </div>
+          <div class="footer-col">
+            <div class="footer-col-title">Application</div>
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('customers') }}">Customers</a>
+            <a href="{{ url_for('decisions_log') }}">AI Decisions</a>
+            <a href="{{ url_for('seed_demo_data') }}">Load demo data</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>SmartCart Recovery Agent · AI Growth &amp; Agentic Commerce</span>
+        <span>Built by Rudra Soni</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Nav solidify on scroll
+    const nav = document.getElementById('lpNav');
+    const onScroll = () => { nav.classList.toggle('solid', window.scrollY > 12); };
+    document.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    // Mobile nav toggle -> just jump straight to the app on small screens
+    const navToggle = document.getElementById('navToggle');
+    if (navToggle) navToggle.addEventListener('click', () => { window.location.href = "{{ url_for('dashboard') }}"; });
+
+    // Scroll reveal
+    const revealEls = document.querySelectorAll('.reveal');
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+      }, { threshold: 0.12 });
+      revealEls.forEach(el => io.observe(el));
+    } else {
+      revealEls.forEach(el => el.classList.add('in'));
+    }
+
+    // Count-up for metrics strip
+    function formatINR(n) {
+      n = Math.round(n);
+      if (n >= 100000) return '₹' + (n / 100000).toFixed(2) + 'L';
+      if (n >= 1000) return '₹' + (n / 1000).toFixed(1) + 'k';
+      return '₹' + n;
+    }
+    function animateCount(el) {
+      const target = parseFloat(el.getAttribute('data-count'));
+      const suffix = el.getAttribute('data-suffix') || '';
+      const isInr = el.getAttribute('data-format') === 'inr';
+      const duration = 1100;
+      const start = performance.now();
+      function tick(now) {
+        const p = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - p, 3);
+        const val = target * eased;
+        el.textContent = isInr ? formatINR(val) : (Number.isInteger(target) ? Math.round(val) : val.toFixed(1)) + suffix;
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+    const countEls = document.querySelectorAll('[data-count]');
+    if ('IntersectionObserver' in window) {
+      const countIo = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) { animateCount(e.target); countIo.unobserve(e.target); } });
+      }, { threshold: 0.4 });
+      countEls.forEach(el => countIo.observe(el));
+    }
+
+    // Live feed — gentle auto-rotation so the section feels alive
+    const feedRotation = [
+      { dot: 'rose', time: '13:02', text: 'High-intent cart detected', amt: '₹6,120' },
+      { dot: 'blue', time: '12:57', text: 'SMS recovery sent' },
+      { dot: 'amber', time: '12:51', text: 'AI changed offer — 10% → 15%' },
+      { dot: 'emerald', time: '12:46', text: 'Cart recovered', amt: '₹9,340' },
+      { dot: 'blue', time: '12:40', text: 'Email opened, no click yet' },
+    ];
+    let feedIdx = 0;
+    const feedList = document.getElementById('feedList');
+    function pushFeedItem() {
+      const item = feedRotation[feedIdx % feedRotation.length];
+      feedIdx++;
+      const row = document.createElement('div');
+      row.className = 'feed-row enter';
+      row.innerHTML = `<span class="feed-dot ${item.dot}"></span><span class="feed-time">${item.time}</span><span class="feed-text">${item.text}</span>${item.amt ? `<span class="feed-amt">${item.amt}</span>` : ''}`;
+      feedList.prepend(row);
+      requestAnimationFrame(() => requestAnimationFrame(() => row.classList.remove('enter')));
+      while (feedList.children.length > 5) feedList.removeChild(feedList.lastChild);
+    }
+    setInterval(pushFeedItem, 4200);
+
+    // Decision deep-dive card micro-interactions
+    function fdAction(btn, kind) {
+      const card = btn.closest('.full-decision-card');
+      const note = card.querySelector('#fdNote');
+      if (kind === 'approve') {
+        note.style.color = 'var(--emerald)';
+        note.textContent = '✓ Approved — WhatsApp message queued for delivery.';
+      } else if (kind === 'edit') {
+        note.style.color = 'var(--text-muted)';
+        note.textContent = 'Fine-tune offers, timing and copy from the live dashboard.';
+      } else {
+        note.style.color = 'var(--text-dim)';
+        note.textContent = 'Dismissed — this cart moves to the bottom of the queue.';
+      }
+    }
+  </script>
+
+</body>
+</html>
