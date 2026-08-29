@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Cart Recovery Agent{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0B0F1A;
+    --sidebar-bg: #0D1220;
+    --surface: #131829;
+    --surface-2: #1A2036;
+    --line: #242B45;
+    --line-soft: #1C2238;
+    --text: #F2F4FA;
+    --text-muted: #8993AF;
+    --text-dim: #5B6483;
+    --coral: #FF5D3A;
+    --coral-dim: rgba(255,93,58,0.12);
+    --emerald: #34D399;
+    --emerald-dim: rgba(52,211,153,0.12);
+    --amber: #F5A623;
+    --amber-dim: rgba(245,166,35,0.12);
+    --rose: #FB5B7A;
+    --rose-dim: rgba(251,91,122,0.12);
+    --blue: #6E8BFF;
+    --blue-dim: rgba(110,139,255,0.12);
+    --sidebar-w: 232px;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono{ font-family: 'IBM Plex Mono', monospace; }
+  .display{ font-family: 'Space Grotesk', sans-serif; }
+  a{ color: inherit; text-decoration: none; }
+  ::selection{ background: var(--coral); color:#1a0c07; }
+  svg{ display:block; }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    position: fixed; top:0; left:0; bottom:0; width: var(--sidebar-w);
+    background: var(--sidebar-bg); border-right: 1px solid var(--line-soft);
+    display:flex; flex-direction:column; z-index: 40;
+  }
+  .brand{ display:flex; align-items:center; gap:11px; padding: 20px 18px; border-bottom: 1px solid var(--line-soft); }
+  .brand-mark{
+    width: 30px; height: 30px; border-radius: 8px; flex-shrink:0;
+    background: var(--coral);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Space Grotesk'; font-weight:700; font-size:13.5px; color:#1a0c07;
+  }
+  .brand-name{ font-family:'Space Grotesk'; font-weight:600; font-size:14.5px; letter-spacing:-0.01em; line-height:1.25; }
+  .brand-sub{ font-size:10.5px; color: var(--text-dim); font-family:'IBM Plex Mono'; letter-spacing:0.02em; }
+
+  .side-nav{ flex:1; padding: 14px 12px; display:flex; flex-direction:column; gap:2px; overflow-y:auto; }
+  .side-section-label{ font-family:'IBM Plex Mono'; font-size: 10px; text-transform:uppercase; letter-spacing:0.1em; color: var(--text-dim); padding: 14px 10px 6px; }
+  .side-link{
+    display:flex; align-items:center; gap:10px; padding: 8px 10px; border-radius: 7px;
+    font-size: 13px; font-weight: 500; color: var(--text-muted); transition: all .12s ease;
+  }
+  .side-link svg{ opacity:.85; flex-shrink:0; }
+  .side-link:hover{ color: var(--text); background: var(--surface); }
+  .side-link.active{ color: var(--text); background: var(--surface-2); }
+  .side-link.active svg{ opacity:1; color: var(--coral); }
+
+  .sidebar-footer{ padding: 14px; border-top: 1px solid var(--line-soft); }
+  .agent-status{ display:flex; align-items:center; gap:8px; font-size:12px; color: var(--text-muted); padding: 8px 10px; }
+  .status-dot{ width:6px; height:6px; border-radius:50%; background: var(--emerald); box-shadow: 0 0 0 3px var(--emerald-dim); flex-shrink:0; }
+  .workspace-chip{ display:flex; align-items:center; gap:9px; padding: 9px 10px; margin-top:4px; border-radius:8px; background: var(--surface); border:1px solid var(--line-soft); }
+  .workspace-avatar{ width:22px; height:22px; border-radius:6px; background: var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; color: var(--text-muted); flex-shrink:0; }
+  .workspace-name{ font-size:12px; font-weight:500; color: var(--text); }
+  .workspace-sub{ font-size:10.5px; color: var(--text-dim); }
+
+  /* ---------- Main area ---------- */
+  .main{ margin-left: var(--sidebar-w); min-height:100vh; display:flex; flex-direction:column; }
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    padding: 14px 32px; border-bottom: 1px solid var(--line-soft);
+    position: sticky; top:0; background: rgba(11,15,26,0.85); backdrop-filter: blur(8px); z-index: 30;
+  }
+  .topbar-search{
+    display:flex; align-items:center; gap:8px; background: var(--surface); border:1px solid var(--line);
+    border-radius:8px; padding: 7px 12px; width: 260px; color: var(--text-dim);
+  }
+  .topbar-search input{
+    border:none; background:transparent; outline:none; color: var(--text); font-size:13px; width:100%; font-family:'Inter';
+  }
+  .topbar-search input::placeholder{ color: var(--text-dim); }
+  .topbar-right{ display:flex; align-items:center; gap:14px; }
+  .topbar-avatar{ width:28px; height:28px; border-radius:7px; background: var(--surface-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color: var(--text-muted); }
+
+  .container{ max-width: 1180px; padding: 36px 32px 80px; width:100%; margin:0 auto; }
+
+  .eyebrow{
+    font-family:'IBM Plex Mono'; font-size: 11px; letter-spacing: 0.13em; text-transform: uppercase;
+    color: var(--coral); margin-bottom: 10px; display:flex; align-items:center; gap:8px;
+  }
+  .eyebrow::before{ content:''; width:14px; height:1px; background: var(--coral); }
+  .page-title{ font-family:'Space Grotesk'; font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 8px; }
+  .page-sub{ color: var(--text-muted); font-size: 14px; max-width: 620px; line-height: 1.6; }
+
+  .btn{
+    display:inline-flex; align-items:center; gap:7px; padding: 9px 15px; border-radius: 8px; font-size: 13px; font-weight: 500;
+    border: 1px solid var(--line); color: var(--text-muted); background: transparent; cursor:pointer; transition: all .12s ease; font-family:'Inter';
+  }
+  .btn:hover{ color: var(--text); border-color: rgba(255,255,255,0.22); background: var(--surface); }
+  .btn.primary{ background: var(--coral); color: #1a0c07; border-color: var(--coral); font-weight: 600; }
+  .btn.primary:hover{ background: #FF7452; }
+  .btn.ghost-emerald{ color: var(--emerald); border-color: rgba(52,211,153,0.35); }
+  .btn.ghost-emerald:hover{ background: var(--emerald-dim); }
+
+  /* ---------- Toasts ---------- */
+  .toast-stack{ position: fixed; bottom: 22px; right: 22px; display:flex; flex-direction:column; gap:8px; z-index: 100; }
+  .toast{
+    background: var(--surface-2); border:1px solid var(--line); border-radius:9px; padding: 11px 16px;
+    font-size: 13px; color: var(--text); box-shadow: 0 8px 24px rgba(0,0,0,0.35); display:flex; align-items:center; gap:9px;
+    animation: toast-in .18s ease;
+  }
+  .toast::before{ content:''; width:6px; height:6px; border-radius:50%; background: var(--emerald); flex-shrink:0; }
+  .toast.info::before{ background: var(--blue); }
+  @keyframes toast-in{ from{ opacity:0; transform: translateY(6px);} to{ opacity:1; transform: translateY(0);} }
+
+  /* ---------- Shared components (used across pages) ---------- */
+  .metric-row{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .metric-card{ background: var(--surface); border:1px solid var(--line); border-radius: 12px; padding: 16px 17px; }
+  .metric-label{ font-size: 12px; color: var(--text-muted); margin-bottom: 9px; }
+  .metric-value{ font-family:'Space Grotesk'; font-size: 21px; font-weight: 700; letter-spacing:-0.01em; }
+
+  .empty-state{ background: var(--surface); border: 1px dashed var(--line); border-radius: 14px; padding: 56px 40px; text-align:center; }
+  .empty-title{ font-family:'Space Grotesk'; font-size: 17px; font-weight:600; margin-bottom: 9px;}
+  .empty-copy{ color: var(--text-muted); font-size: 13.5px; max-width: 440px; margin: 0 auto; line-height:1.6; }
+  .feed-empty{ font-size: 12.5px; color: var(--text-dim); line-height:1.6; }
+
+  .section-label{ font-family:'IBM Plex Mono'; font-size: 11.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .section-row{ display:flex; align-items:center; justify-content:space-between; margin: 8px 0 14px; }
+  .text-muted{ color: var(--text-muted); }
+
+  .intent-badge{ font-size: 11px; font-weight:600; padding: 3px 9px; border-radius: 6px; display:inline-block; }
+  .intent-very-high{ color: var(--rose); background: var(--rose-dim); }
+  .intent-high{ color: var(--coral); background: var(--coral-dim); }
+  .intent-medium{ color: var(--amber); background: var(--amber-dim); }
+  .intent-low{ color: var(--text-dim); background: var(--surface-2); }
+
+  .status-chip{ font-size: 11px; font-weight:600; padding:3px 9px; border-radius:6px; }
+  .status-abandoned{ color: var(--rose); background: var(--rose-dim); }
+  .status-recovered{ color: var(--emerald); background: var(--emerald-dim); }
+
+  @media (max-width: 880px){
+    :root{ --sidebar-w: 0px; }
+    .sidebar{ display:none; }
+    .main{ margin-left:0; }
+    .topbar-search{ display:none; }
+    .container{ padding: 24px 18px 60px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <a class="brand" href="{{ url_for('landing') }}">
+      <div class="brand-mark">CR</div>
+      <div>
+        <div class="brand-name">Cart Recovery</div>
+        <div class="brand-sub">AI revenue infra</div>
+      </div>
+    </a>
+
+    <nav class="side-nav">
+      <div class="side-section-label">Workspace</div>
+      <a href="{{ url_for('dashboard') }}" class="side-link {% if request.path == url_for('dashboard') %}active{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Overview
+      </a>
+      <a href="{{ url_for('dashboard') }}#queue" class="side-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg>
+        Recovery Queue
+      </a>
+      <a href="/customers" class="side-link {% if request.path == '/customers' %}active{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3.1-6.2 7-6.2s7 2.6 7 6.2"/></svg>
+        Customers
+      </a>
+      <a href="/campaigns" class="side-link {% if request.path == '/campaigns' %}active{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 10v4h3l5 4V6L7 10H4z"/><path d="M16 9a4 4 0 010 6"/></svg>
+        Campaigns
+      </a>
+
+      <div class="side-section-label">Insights</div>
+      <a href="/analytics" class="side-link {% if request.path == '/analytics' %}active{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><line x1="5" y1="20" x2="5" y2="12"/><line x1="12" y1="20" x2="12" y2="6"/><line x1="19" y1="20" x2="19" y2="15"/></svg>
+        Analytics
+      </a>
+      <a href="/decisions" class="side-link {% if request.path == '/decisions' %}active{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>
+        AI Decisions
+      </a>
+
+      <div class="side-section-label">System</div>
+      <a href="/settings" class="side-link {% if request.path == '/settings' %}active{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a1.7 1.7 0 000-3l1-1.7-1.7-1.7-1.7 1a1.7 1.7 0 00-3 0l-1-1.7-1.7 1.7 1 1.7a1.7 1.7 0 00-3 0l-1.7-1L4.9 8.8l1.7 1a1.7 1.7 0 000 3l-1.7 1 1.7 1.7 1.7-1a1.7 1.7 0 003 0l1 1.7 1.7-1.7-1-1.7a1.7 1.7 0 003 0l1.7 1 1.7-1.7-1.7-1z"/></svg>
+        Settings
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="agent-status"><span class="status-dot"></span> Agent operational</div>
+      <div class="workspace-chip">
+        <div class="workspace-avatar">RS</div>
+        <div>
+          <div class="workspace-name">Rudra's Store</div>
+          <div class="workspace-sub">Free workspace</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="globalSearch" placeholder="Search customers or carts\u2026">
+      </div>
+      <div class="topbar-right">
+        <a href="/seed" class="btn" style="font-size:12px; padding:7px 12px;">\u21bb Load demo data</a>
+        <a href="/add" class="btn primary" style="font-size:12px; padding:7px 13px;">+ New Cart</a>
+        <div class="topbar-avatar">RS</div>
+      </div>
+    </div>
+
+    <div class="container">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="toast {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+  </div>
+
+  <script>
+    // auto-dismiss flashed toasts
+    document.querySelectorAll('.toast').forEach((el, i) => {
+      setTimeout(() => { el.style.transition = 'opacity .25s ease'; el.style.opacity = '0'; setTimeout(() => el.remove(), 260); }, 3200 + i * 300);
+    });
+
+    // lightweight client-side search across [data-search] rows/cards
+    const searchInput = document.getElementById('globalSearch');
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        const q = searchInput.value.trim().toLowerCase();
+        document.querySelectorAll('[data-search]').forEach(el => {
+          const hay = el.getAttribute('data-search').toLowerCase();
+          el.style.display = (!q || hay.includes(q)) ? '' : 'none';
+        });
+      });
+    }
+
+    function showToast(text, category) {
+      const stack = document.getElementById('toastStack');
+      const el = document.createElement('div');
+      el.className = 'toast ' + (category || '');
+      el.textContent = text;
+      stack.appendChild(el);
+      setTimeout(() => { el.style.transition = 'opacity .25s ease'; el.style.opacity = '0'; setTimeout(() => el.remove(), 260); }, 3000);
+    }
+  </script>
+
+</body>
+</html>

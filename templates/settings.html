@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Settings \u00b7 Cart Recovery{% endblock %}
+{% block content %}
+
+<div class="eyebrow">Workspace</div>
+<h1 class="page-title">Settings</h1>
+<p class="page-sub">Workspace and agent configuration for this demo instance.</p>
+
+<div class="settings-grid">
+  <div class="settings-card">
+    <div class="section-label" style="margin-bottom:14px;">Workspace</div>
+    <div class="settings-row"><span>Workspace name</span><span class="text-muted">Rudra's Store</span></div>
+    <div class="settings-row"><span>Plan</span><span class="text-muted">Free</span></div>
+    <div class="settings-row"><span>Currency</span><span class="text-muted">INR (\u20b9)</span></div>
+  </div>
+
+  <div class="settings-card">
+    <div class="section-label" style="margin-bottom:14px;">Agent configuration</div>
+    <div class="settings-row"><span>Scoring model</span><span class="text-muted">Rule-based weighted scoring</span></div>
+    <div class="settings-row"><span>Message generation</span><span class="text-muted">Rule-based (LLM-ready)</span></div>
+    <div class="settings-row"><span>Status</span><span style="color:var(--emerald);">\u25cf Operational</span></div>
+  </div>
+</div>
+
+<style>
+  .settings-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-top:26px; }
+  .settings-card{ background: var(--surface); border:1px solid var(--line); border-radius:14px; padding:22px 24px; }
+  .settings-row{ display:flex; justify-content:space-between; padding: 11px 0; border-bottom: 1px solid var(--line-soft); font-size:13px; }
+  .settings-row:last-child{ border-bottom:none; }
+  @media (max-width: 800px){ .settings-grid{ grid-template-columns: 1fr; } }
+</style>
+
+{% endblock %}

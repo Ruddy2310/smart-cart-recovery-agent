@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}New Cart \u00b7 Cart Recovery{% endblock %}
+{% block content %}
+
+<div class="eyebrow">New entry</div>
+<h1 class="page-title">Log an abandoned cart.</h1>
+<p class="page-sub">In production this would come from your store's checkout events automatically. Here, add one manually to see the agent score, prioritize and message it.</p>
+
+<form method="POST" class="form-card">
+  <div class="field">
+    <label>Customer name</label>
+    <input type="text" name="customer_name" placeholder="e.g. Ananya Desai" required>
+  </div>
+  <div class="field">
+    <label>Contact (email or phone)</label>
+    <input type="text" name="customer_contact" placeholder="e.g. ananya@example.com" required>
+  </div>
+  <div class="field">
+    <label>Product name</label>
+    <input type="text" name="product_name" placeholder="e.g. Sony WH-1000XM5" required>
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <label>Cart value (\u20b9)</label>
+      <input type="number" step="0.01" name="cart_value" placeholder="2499" required>
+    </div>
+    <div class="field">
+      <label>Items count</label>
+      <input type="number" name="items_count" placeholder="1" required>
+    </div>
+  </div>
+  <label class="checkbox-row">
+    <input type="checkbox" name="is_repeat_customer">
+    <span>This is a repeat customer</span>
+  </label>
+
+  <div class="form-actions">
+    <button type="submit" class="btn primary">Add to recovery queue</button>
+    <a href="{{ url_for('dashboard') }}" class="cancel-link">Cancel</a>
+  </div>
+</form>
+
+<style>
+  .form-card{ background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 26px; max-width: 480px; margin-top: 26px; }
+  .field{ margin-bottom: 17px; flex:1; }
+  .field label{ display:block; font-size: 12px; color: var(--text-muted); margin-bottom: 7px; font-family:'IBM Plex Mono'; }
+  .field input{
+    width: 100%; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px 12px; color: var(--text); font-size: 13.5px; font-family:'Inter'; outline:none;
+    transition: border-color .15s ease;
+  }
+  .field input:focus{ border-color: var(--coral); }
+  .field-row{ display:flex; gap: 14px; }
+  .checkbox-row{ display:flex; align-items:center; gap:9px; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; cursor:pointer; }
+  .checkbox-row input{ width:16px; height:16px; accent-color: var(--coral); }
+  .form-actions{ display:flex; align-items:center; gap: 16px; margin-top: 20px; }
+  .cancel-link{ color: var(--text-muted); font-size: 13px; }
+  .cancel-link:hover{ color: var(--text); }
+</style>
+
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Campaigns \u00b7 Cart Recovery{% endblock %}
+{% block content %}
+
+<div class="eyebrow">Recovery strategy</div>
+<h1 class="page-title">Campaign Builder</h1>
+<p class="page-sub">Configure how the agent triggers, segments, and reaches out \u2014 then it runs the same loop the queue and decision log are built on.</p>
+
+<div class="campaign-layout">
+  <div class="campaign-config">
+    <div class="config-group">
+      <div class="config-label">Trigger</div>
+      <div class="config-row">
+        <span class="config-text">Cart abandoned for</span>
+        <select class="config-select"><option>15 minutes</option><option selected>30 minutes</option><option>1 hour</option><option>3 hours</option></select>
+      </div>
+    </div>
+
+    <div class="config-group">
+      <div class="config-label">Audience</div>
+      <div class="chip-select">
+        <span class="chip-opt active">High intent</span>
+        <span class="chip-opt">Repeat customers</span>
+        <span class="chip-opt">All abandoned carts</span>
+      </div>
+    </div>
+
+    <div class="config-group">
+      <div class="config-label">Channel</div>
+      <div class="chip-select">
+        <span class="chip-opt active">WhatsApp</span>
+        <span class="chip-opt active">Email</span>
+        <span class="chip-opt">SMS</span>
+      </div>
+    </div>
+
+    <div class="config-group">
+      <div class="config-label">Offer strategy</div>
+      <div class="chip-select">
+        <span class="chip-opt">No discount</span>
+        <span class="chip-opt">Flat 10%</span>
+        <span class="chip-opt active">Dynamic (agent-decided)</span>
+      </div>
+    </div>
+
+    <div class="config-group toggle-row">
+      <div>
+        <div class="config-label" style="margin-bottom:2px;">AI optimization</div>
+        <div class="config-hint">Let the agent adjust urgency and offer depth per cart automatically.</div>
+      </div>
+      <div class="toggle on"><div class="toggle-knob"></div></div>
+    </div>
+
+    <button class="btn primary" style="margin-top: 8px;" onclick="showToast('Campaign strategy saved.', 'success')">Save strategy</button>
+  </div>
+
+  <div class="campaign-preview">
+    <div class="section-label" style="margin-bottom:16px;">Recovery workflow</div>
+    <div class="flow">
+      {% for step in ["Cart abandoned", "AI intent scoring", "Customer segmentation", "Offer selection", "Channel selection", "Recovery message", "Conversion tracking"] %}
+      <div class="flow-step">
+        <div class="flow-dot"></div>
+        <div class="flow-text">{{ step }}</div>
+      </div>
+      {% if not loop.last %}<div class="flow-line"></div>{% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<style>
+  .campaign-layout{ display:grid; grid-template-columns: 1fr 340px; gap:16px; margin-top: 28px; align-items:start; }
+  .campaign-config{ background: var(--surface); border:1px solid var(--line); border-radius:14px; padding: 24px 26px; }
+  .config-group{ margin-bottom: 22px; }
+  .config-label{ font-family:'IBM Plex Mono'; font-size: 11px; text-transform:uppercase; letter-spacing:0.07em; color: var(--text-dim); margin-bottom: 10px; }
+  .config-hint{ font-size:11.5px; color: var(--text-dim); max-width: 320px; line-height:1.5; }
+  .config-row{ display:flex; align-items:center; gap:10px; }
+  .config-text{ font-size:13px; color: var(--text-muted); }
+  .config-select{ background: var(--surface-2); border:1px solid var(--line); color: var(--text); font-size:13px; padding:7px 10px; border-radius:7px; font-family:'Inter'; }
+  .chip-select{ display:flex; gap:8px; flex-wrap:wrap; }
+  .chip-opt{ font-size:12.5px; padding:7px 13px; border-radius:20px; border:1px solid var(--line); color: var(--text-dim); cursor:pointer; transition: all .12s ease; }
+  .chip-opt:hover{ color: var(--text); }
+  .chip-opt.active{ background: var(--coral-dim); border-color: rgba(255,93,58,0.4); color: var(--coral); }
+  .toggle-row{ display:flex; align-items:center; justify-content:space-between; }
+  .toggle{ width:38px; height:22px; border-radius:20px; background: var(--surface-2); border:1px solid var(--line); position:relative; cursor:pointer; flex-shrink:0; }
+  .toggle.on{ background: rgba(52,211,153,0.25); border-color: var(--emerald); }
+  .toggle-knob{ width:16px; height:16px; border-radius:50%; background: var(--emerald); position:absolute; top:2px; right:2px; }
+
+  .campaign-preview{ background: var(--surface); border:1px solid var(--line); border-radius:14px; padding:22px; }
+  .flow{ display:flex; flex-direction:column; }
+  .flow-step{ display:flex; align-items:center; gap:11px; }
+  .flow-dot{ width:8px; height:8px; border-radius:50%; background: var(--coral); flex-shrink:0; }
+  .flow-text{ font-size:12.5px; color: var(--text); }
+  .flow-line{ width:1px; height:16px; background: var(--line); margin-left:3.5px; }
+
+  @media (max-width: 900px){ .campaign-layout{ grid-template-columns:1fr; } }
+</style>
+
+{% endblock %}
