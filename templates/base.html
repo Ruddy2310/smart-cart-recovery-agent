@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{% block title %}SmartCart Recovery Agent{% endblock %}</title>
+<title>{% block title %}Cart Recovery Agent{% endblock %}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -58,8 +58,7 @@
     display:flex; align-items:center; justify-content:center;
     font-family:'Space Grotesk'; font-weight:700; font-size:13.5px; color:#1a0c07;
   }
-  .brand-name{ font-family:'Space Grotesk'; font-weight:600; font-size:12.5px; letter-spacing:-0.01em; line-height:1.3; }
-  .brand-ai-dot{ display:inline-block; width:5px; height:5px; border-radius:50%; background: var(--emerald); box-shadow: 0 0 0 2px var(--emerald-dim); margin-right:4px; }
+  .brand-name{ font-family:'Space Grotesk'; font-weight:600; font-size:14.5px; letter-spacing:-0.01em; line-height:1.25; }
   .brand-sub{ font-size:10.5px; color: var(--text-dim); font-family:'IBM Plex Mono'; letter-spacing:0.02em; }
 
   .side-nav{ flex:1; padding: 14px 12px; display:flex; flex-direction:column; gap:2px; overflow-y:auto; }
@@ -169,10 +168,10 @@
 
   <div class="sidebar">
     <a class="brand" href="{{ url_for('landing') }}">
-      <div class="brand-mark">S</div>
+      <div class="brand-mark">CR</div>
       <div>
-        <div class="brand-name">SmartCart<br>Recovery Agent</div>
-        <div class="brand-sub"><span class="brand-ai-dot"></span> AI Agent</div>
+        <div class="brand-name">Cart Recovery</div>
+        <div class="brand-sub">AI revenue infra</div>
       </div>
     </a>
 

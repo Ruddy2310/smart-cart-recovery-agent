@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SmartCart Recovery Agent — AI revenue recovery for abandoned carts</title>
+<title>Cart Recovery Agent — AI revenue recovery for abandoned carts</title>
 <meta name="description" content="An AI agent that decides who to contact, when to contact them, and what offer to send — turning abandoned checkouts into recovered revenue.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -74,9 +74,7 @@
     width:30px; height:30px; border-radius:8px; background: var(--coral); flex-shrink:0;
     display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:700; font-size:13.5px; color:#1a0c07;
   }
-  .lp-brand-name{ font-family:'Space Grotesk'; font-weight:600; font-size:13px; letter-spacing:-0.01em; line-height:1.28; }
-  .lp-brand-ai{ display:flex; align-items:center; gap:5px; font-family:'IBM Plex Mono'; font-size:10px; color: var(--text-dim); margin-top:2px; }
-  .lp-brand-ai .live-dot{ width:5px; height:5px; }
+  .lp-brand-name{ font-family:'Space Grotesk'; font-weight:600; font-size:14.5px; letter-spacing:-0.01em; }
   .lp-nav-links{ display:flex; align-items:center; gap:30px; }
   .lp-nav-links a{ font-size:13px; color: var(--text-muted); transition: color .12s ease; }
   .lp-nav-links a:hover{ color: var(--text); }
@@ -143,6 +141,15 @@
   .hero-trust{ display:flex; gap:26px; flex-wrap:wrap; }
   .hero-trust-item{ font-size:12.5px; color: var(--text-dim); display:flex; align-items:center; gap:7px; }
   .hero-trust-item svg{ color: var(--emerald); flex-shrink:0; }
+
+  .hero-signal{ position:absolute; z-index:2; display:flex; align-items:center; gap:9px; min-width:154px; padding:10px 12px; border:1px solid var(--line); background:rgba(19,24,41,.92); backdrop-filter:blur(12px); border-radius:10px; box-shadow:0 16px 34px -20px rgba(0,0,0,.85); color:var(--text); animation:signalFloat 6s ease-in-out infinite; }
+  .hero-signal b{ display:block; font-size:11px; font-weight:600; line-height:1.2; }
+  .hero-signal small{ display:block; color:var(--text-dim); font-size:10px; margin-top:3px; }
+  .signal-icon{ width:26px; height:26px; border-radius:7px; display:grid; place-items:center; background:var(--surface-2); color:var(--coral); font-weight:700; flex-shrink:0; }
+  .signal-a{ top:7%; right:-3%; animation-delay:-1s; }
+  .signal-b{ bottom:25%; left:-7%; animation-delay:-3s; }
+  .signal-c{ bottom:5%; right:1%; animation-delay:-5s; }
+  @keyframes signalFloat{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-7px); } }
 
   /* Decision card (signature element) */
   .hero-visual{ position:relative; display:flex; justify-content:center; }
@@ -365,51 +372,6 @@
   .case-card.after .case-num{ color: var(--emerald); }
   .case-sub{ font-size:12.5px; color: var(--text-muted); margin-top:10px; }
 
-  /* ================= TESTIMONIAL ================= */
-  .testimonial{ padding: 100px 0; }
-  .testimonial-card{
-    max-width: 760px; margin: 0 auto; background: var(--surface); border:1px solid var(--line);
-    border-radius: var(--radius-lg); padding: 44px 44px 34px; text-align:center;
-  }
-  .testimonial-tag{
-    display:inline-flex; align-items:center; gap:6px; font-family:'IBM Plex Mono'; font-size:10.5px;
-    letter-spacing:0.08em; text-transform:uppercase; color: var(--text-dim); background: var(--surface-2);
-    border:1px solid var(--line-soft); border-radius:100px; padding:5px 12px; margin-bottom:22px;
-  }
-  .testimonial-quote{ font-family:'Space Grotesk'; font-size: clamp(18px, 2.2vw, 23px); font-weight:600; line-height:1.5; letter-spacing:-0.01em; margin:0 0 26px; }
-  .testimonial-person{ display:flex; align-items:center; justify-content:center; gap:11px; }
-  .testimonial-avatar{ width:36px; height:36px; border-radius:50%; background: var(--coral-dim); color: var(--coral); display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:700; font-size:13px; }
-  .testimonial-meta{ text-align:left; }
-  .testimonial-name{ font-size:13.5px; font-weight:600; }
-  .testimonial-role{ font-size:12px; color: var(--text-dim); }
-
-  /* ================= PRICING ================= */
-  .pricing{ padding: 100px 0; }
-  .pricing-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 14px; align-items:stretch; }
-  .price-card{
-    background: var(--surface); border:1px solid var(--line); border-radius: var(--radius-lg);
-    padding: 28px 24px; display:flex; flex-direction:column; transition: transform .15s ease, border-color .15s ease;
-  }
-  .price-card:hover{ transform: translateY(-3px); border-color: rgba(255,255,255,0.18); }
-  .price-card.featured{ background: linear-gradient(180deg, var(--coral-dim), var(--surface) 55%); border-color: rgba(255,93,58,0.4); box-shadow: 0 24px 60px -30px rgba(255,93,58,0.35); position:relative; }
-  .price-badge{ position:absolute; top:-11px; left:24px; background: var(--coral); color:#1a0c07; font-family:'IBM Plex Mono'; font-size:10px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; padding:4px 10px; border-radius:100px; }
-  .price-name{ font-family:'Space Grotesk'; font-size:15px; font-weight:600; margin-bottom:6px; }
-  .price-desc{ font-size:12px; color: var(--text-muted); line-height:1.5; margin-bottom:18px; min-height:32px; }
-  .price-amount{ font-family:'Space Grotesk'; font-size:30px; font-weight:700; letter-spacing:-0.02em; }
-  .price-amount span{ font-size:12.5px; font-weight:500; color: var(--text-dim); }
-  .price-list{ list-style:none; margin: 20px 0 24px; padding:0; display:flex; flex-direction:column; gap:10px; flex:1; }
-  .price-list li{ display:flex; align-items:flex-start; gap:8px; font-size:12.5px; color: var(--text-muted); line-height:1.4; }
-  .price-list svg{ flex-shrink:0; margin-top:2px; color: var(--emerald); }
-  .price-card .btn{ width:100%; justify-content:center; }
-
-  @media (max-width: 900px){
-    .pricing-grid{ grid-template-columns: 1fr 1fr; }
-  }
-  @media (max-width: 620px){
-    .pricing-grid{ grid-template-columns: 1fr; }
-    .testimonial-card{ padding: 32px 24px; }
-  }
-
   /* ================= FINAL CTA ================= */
   .final-cta{ padding: 120px 0; text-align:center; }
   .final-cta h2{ font-family:'Space Grotesk'; font-size: clamp(28px, 4vw, 44px); font-weight:700; letter-spacing:-0.02em; margin: 0 0 16px; }
@@ -451,7 +413,7 @@
     .how-step{ padding:0; }
     .metrics-grid{ grid-template-columns: 1fr 1fr; }
     section{ padding-left:0; }
-    .hero, .problem, .how, .decision-deep, .sequence, .channels, .features, .live-feed, .analytics-prev, .case, .testimonial, .pricing, .final-cta{ padding-top: 72px; padding-bottom: 72px; }
+    .hero, .problem, .how, .decision-deep, .sequence, .channels, .features, .live-feed, .analytics-prev, .case, .final-cta{ padding-top: 72px; padding-bottom: 72px; }
     .footer-top{ flex-direction:column; }
   }
 </style>
@@ -460,23 +422,18 @@
 
   <nav class="lp-nav" id="lpNav">
     <a class="lp-brand" href="#top">
-      <div class="lp-brand-mark">S</div>
-      <div>
-        <div class="lp-brand-name">SmartCart<br>Recovery Agent</div>
-        <div class="lp-brand-ai"><span class="live-dot"></span> AI Agent</div>
-      </div>
+      <div class="lp-brand-mark">CR</div>
+      <div class="lp-brand-name">Cart Recovery</div>
     </a>
     <div class="lp-nav-links">
       <a href="#how-it-works">How it works</a>
       <a href="#features">Features</a>
       <a href="#analytics">Analytics</a>
-      <a href="#pricing">Pricing</a>
       <a href="{{ url_for('decisions_log') }}">AI Decisions</a>
     </div>
     <div class="lp-nav-actions">
-      <a href="{{ url_for('settings') }}" class="btn ghost sm nav-signin">Sign in</a>
       <a href="{{ url_for('dashboard') }}" class="btn ghost sm">View Demo</a>
-      <a href="{{ url_for('seed_demo_data') }}" class="btn primary sm">Start Recovery</a>
+      <a href="{{ url_for('seed_demo_data') }}" class="btn primary sm">Start Recovering Revenue</a>
     </div>
     <button class="lp-nav-toggle" id="navToggle" aria-label="Menu">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
@@ -488,9 +445,9 @@
     <div class="wrap">
       <div class="hero-inner">
         <div>
-          <div class="live-chip"><span class="live-dot"></span> AI Recovery Agent Online</div>
-          <h1 class="reveal in">AI-powered revenue recovery for abandoned carts.</h1>
-          <p class="hero-sub reveal in">Turn abandoned checkouts into recovered revenue with an AI agent that decides who to contact, when to contact them, and what offer to send.</p>
+          <div class="live-chip"><span class="live-dot"></span> AI Agent Online</div>
+          <h1 class="reveal in">Turn abandoned carts into recovered revenue.</h1>
+          <p class="hero-sub reveal in">Your AI revenue recovery agent that knows who to contact, when to contact them, and what to offer.</p>
           <div class="hero-cta">
             <a href="{{ url_for('seed_demo_data') }}" class="btn primary">Start Recovery</a>
             <a href="{{ url_for('dashboard') }}" class="btn ghost">View Demo →</a>
@@ -502,6 +459,9 @@
         </div>
 
         <div class="hero-visual">
+          <div class="hero-signal signal-a"><span class="signal-icon">↗</span><div><b>Checkout viewed</b><small>3 times</small></div></div>
+          <div class="hero-signal signal-b"><span class="signal-icon">◷</span><div><b>42 min inactive</b><small>High urgency</small></div></div>
+          <div class="hero-signal signal-c"><span class="signal-icon">✓</span><div><b>Previous buyer</b><small>High LTV</small></div></div>
           <div class="decision-card">
             <div class="decision-card-head">
               <div class="decision-card-tag"><span class="live-dot"></span> AI RECOVERY DECISION</div>
@@ -926,82 +886,6 @@
     </div>
   </section>
 
-  <!-- ================= TESTIMONIAL ================= -->
-  <section class="testimonial">
-    <div class="wrap">
-      <div class="testimonial-card reveal">
-        <div class="testimonial-tag">Demo customer feedback</div>
-        <p class="testimonial-quote">"Instead of manually deciding which abandoned carts deserve attention, the agent gives our team a prioritized recovery queue — with the reasoning attached, not just a score."</p>
-        <div class="testimonial-person">
-          <div class="testimonial-avatar">RS</div>
-          <div class="testimonial-meta">
-            <div class="testimonial-name">Rudra Soni</div>
-            <div class="testimonial-role">Founder, demo workspace</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= PRICING ================= -->
-  <section class="pricing" id="pricing">
-    <div class="wrap">
-      <div class="sec-head center">
-        <div class="eyebrow" style="justify-content:center;">Pricing</div>
-        <h2 class="sec-title reveal">Start free. Scale when revenue does.</h2>
-        <p class="sec-sub reveal">Every plan includes the same decision engine — limits scale with your cart volume.</p>
-      </div>
-      <div class="pricing-grid">
-        <div class="price-card reveal">
-          <div class="price-name">Free</div>
-          <div class="price-desc">Try the agent on a small, live cart volume.</div>
-          <div class="price-amount">₹0<span>/mo</span></div>
-          <ul class="price-list">
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Up to 50 carts / mo</li>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>1 recovery channel</li>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Basic analytics</li>
-          </ul>
-          <a href="{{ url_for('seed_demo_data') }}" class="btn ghost sm">Start free</a>
-        </div>
-        <div class="price-card reveal">
-          <div class="price-name">Starter</div>
-          <div class="price-desc">For stores just switching on recovery.</div>
-          <div class="price-amount">₹2,499<span>/mo</span></div>
-          <ul class="price-list">
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Up to 1,000 carts / mo</li>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>WhatsApp + Email</li>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Decision log access</li>
-          </ul>
-          <a href="{{ url_for('seed_demo_data') }}" class="btn ghost sm">Choose Starter</a>
-        </div>
-        <div class="price-card featured reveal">
-          <div class="price-badge">Most popular</div>
-          <div class="price-name">Growth</div>
-          <div class="price-desc">For teams actively recovering revenue at scale.</div>
-          <div class="price-amount">₹7,999<span>/mo</span></div>
-          <ul class="price-list">
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Up to 10,000 carts / mo</li>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>All channels + AI timing</li>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Customer segmentation</li>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Full analytics + A/B tests</li>
-          </ul>
-          <a href="{{ url_for('seed_demo_data') }}" class="btn primary sm">Choose Growth</a>
-        </div>
-        <div class="price-card reveal">
-          <div class="price-name">Scale</div>
-          <div class="price-desc">High-volume stores with dedicated support.</div>
-          <div class="price-amount">Custom</div>
-          <ul class="price-list">
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Unlimited carts</li>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Custom integrations</li>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Dedicated success manager</li>
-          </ul>
-          <a href="{{ url_for('settings') }}" class="btn ghost sm">Talk to us</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- ================= FINAL CTA ================= -->
   <section class="final-cta">
     <div class="wrap">
@@ -1016,10 +900,8 @@
       <div class="footer-top">
         <div>
           <a class="lp-brand" href="#top">
-            <div class="lp-brand-mark">S</div>
-            <div>
-              <div class="lp-brand-name">SmartCart<br>Recovery Agent</div>
-            </div>
+            <div class="lp-brand-mark">CR</div>
+            <div class="lp-brand-name">Cart Recovery</div>
           </a>
           <p class="footer-brand-sub">An AI agent that decides who to contact, when, and with what offer — so abandoned carts turn back into revenue.</p>
         </div>
@@ -1041,7 +923,7 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <span>SmartCart Recovery Agent · AI Growth &amp; Agentic Commerce</span>
+        <span>Cart Recovery Agent · AI Growth &amp; Agentic Commerce</span>
         <span>Built by Rudra Soni</span>
       </div>
     </div>
