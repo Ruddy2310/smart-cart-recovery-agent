@@ -16,8 +16,15 @@ import sqlite3
 import os
 import random
 
-app = Flask(__name__)
-DB_PATH = os.path.join(os.path.dirname(__file__), "cart_recovery.db")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app = Flask(__name__, template_folder=os.path.join(BASE_DIR, "templates"))
+
+# Vercel's serverless filesystem is read-only except for /tmp.
+# Locally this still writes next to app.py exactly like before.
+if os.environ.get("VERCEL"):
+    DB_PATH = "/tmp/cart_recovery.db"
+else:
+    DB_PATH = os.path.join(BASE_DIR, "cart_recovery.db")
 
 
 # ---------------------------------------------------------------------------
@@ -50,6 +57,11 @@ def init_db():
     )
     conn.commit()
     conn.close()
+
+
+# Make sure the table exists before any request handles it -- important on
+# Vercel because there is no __main__ block running there (see api/index.py).
+init_db()
 
 
 # ---------------------------------------------------------------------------
@@ -95,7 +107,7 @@ def generate_recovery_message(name, product, discount, priority, is_repeat):
     but this function is structured so it can be swapped for a live LLM
     call (see README) without changing the rest of the pipeline.
     """
-    greeting = random.choice([f"Hey {name}!", f"Hi {name},", f"{name}, quick one for you 👋"])
+    greeting = random.choice([f"Hey {name}!", f"Hi {name},", f"{name}, quick one for you \U0001F44B"])
 
     if is_repeat:
         loyalty_line = "As one of our valued repeat customers, "
@@ -245,5 +257,4 @@ def seed_demo_data():
 
 
 if __name__ == "__main__":
-    init_db()
     app.run(debug=True, host="0.0.0.0", port=5000)

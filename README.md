@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Smart Cart Recovery Agent
 
 **Track:** AI Growth & Agentic Commerce — Razorpay AI Builder Internship 2026
@@ -93,6 +92,3 @@ The caps on value and idle-time prevent one signal from dominating the score, so
 ## Author
 
 Rudra Soni
-=======
-# smart-cart-recovery-agent
->>>>>>> ec6b1d16f5d5f0f0a4b2000ce09e401dda0e7ff2
