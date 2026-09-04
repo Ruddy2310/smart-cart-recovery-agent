@@ -197,24 +197,72 @@ def synthesize_signals(cart):
 
 
 def build_reasoning(cart, signals, priority, probability, idle_hours):
+    """
+    Reasoning grounded in the actual scoring inputs:
+      - cart_value  (contributes up to 20 pts)
+      - items_count (2 pts each)
+      - is_repeat   (15 pts bonus)
+      - idle_hours  (up to 15 pts, also drives urgency)
+    and reflects the actual channel + discount the scoring engine selected.
+    """
     parts = []
+
+    # --- Checkout behaviour (real signal from synthesize_signals) ---
     parts.append(
         f"{cart['customer_name']} reached the \u201c{signals['checkout_stage'].lower()}\u201d stage "
-        f"and spent {signals['session_minutes']} min viewing {signals['products_viewed']} products before leaving."
+        f"and spent {signals['session_minutes']} min browsing {signals['products_viewed']} products "
+        f"on {signals['device']} before abandoning."
     )
+
+    # --- Cart value contribution ---
+    value_score = round(min(cart["cart_value"] / 500, 20), 1)
+    parts.append(
+        f"The cart value of \u20b9{cart['cart_value']:.0f} added {value_score} points to the priority score "
+        f"({'high' if value_score >= 15 else 'moderate' if value_score >= 8 else 'low'} value cart)."
+    )
+
+    # --- Repeat customer bonus ---
     if cart["is_repeat_customer"]:
         parts.append(
-            f"They've ordered {signals['previous_purchases']} times before at an average of "
-            f"\u20b9{signals['avg_order_value']:.0f} per order, so this is a known, high-trust buyer."
+            f"A repeat-customer bonus of 15 points was applied — "
+            f"{cart['customer_name']} has {signals['previous_purchases']} prior order(s), "
+            f"making them a high-trust buyer worth prioritising."
         )
-    if idle_hours > 24:
-        parts.append(f"The cart has been idle for {format_idle(idle_hours)} \u2014 recovery odds drop the longer this sits.")
     else:
-        parts.append(f"Idle for only {format_idle(idle_hours)}, still well inside the ideal recovery window.")
-    parts.append(
-        f"Similar {priority.lower()}-priority carts convert at roughly {probability}% when contacted "
-        f"through the recommended channel within the next hour."
+        parts.append(
+            "No repeat-customer bonus applied — this appears to be a first-time buyer, "
+            "so the offer needs to do more of the work."
+        )
+
+    # --- Idle time contribution and urgency ---
+    idle_score = round(min(idle_hours * 1.5, 15), 1)
+    if idle_hours > 48:
+        parts.append(
+            f"The cart has been idle for {format_idle(idle_hours)} (+{idle_score} urgency points) \u2014 "
+            f"recovery likelihood is declining and immediate outreach is critical."
+        )
+    elif idle_hours > 6:
+        parts.append(
+            f"Idle for {format_idle(idle_hours)} (+{idle_score} urgency points) \u2014 "
+            f"still within the effective recovery window but urgency is rising."
+        )
+    else:
+        parts.append(
+            f"Idle for only {format_idle(idle_hours)} (+{idle_score} urgency points) \u2014 "
+            f"the customer is still recent and outreach now has the highest chance of success."
+        )
+
+    # --- Final decision summary ---
+    channel = recommended_channel(priority)
+    score, _, discount = score_recovery_priority(
+        cart["cart_value"], cart["items_count"], cart["is_repeat_customer"], idle_hours
     )
+    parts.append(
+        f"Overall priority score: {round(score, 1)} \u2192 {priority} tier. "
+        f"Agent recommends {channel} with a {discount}% discount code. "
+        f"Estimated recovery probability: {probability}%."
+    )
+
     return " ".join(parts)
 
 
@@ -440,12 +488,23 @@ def delete_cart(cart_id):
     return redirect(url_for("dashboard"))
 
 
+PAGE_SIZE = 20
+
 @app.route("/decisions")
 def decisions_log():
+    page = max(1, request.args.get("page", 1, type=int))
     conn = get_db()
-    rows = conn.execute("SELECT * FROM decisions ORDER BY created_at DESC LIMIT 100").fetchall()
+    total = conn.execute("SELECT COUNT(*) FROM decisions").fetchone()[0]
+    rows = conn.execute(
+        "SELECT * FROM decisions ORDER BY created_at DESC LIMIT ? OFFSET ?",
+        (PAGE_SIZE, (page - 1) * PAGE_SIZE),
+    ).fetchall()
     conn.close()
-    return render_template("decisions.html", decisions=rows)
+    total_pages = max(1, (total + PAGE_SIZE - 1) // PAGE_SIZE)
+    return render_template(
+        "decisions.html", decisions=rows,
+        page=page, total_pages=total_pages, total=total,
+    )
 
 
 @app.route("/customers")
@@ -466,8 +525,15 @@ def customers():
         if c["status"] == "recovered":
             entry["recovered"] += 1
 
-    rows = sorted(by_customer.values(), key=lambda r: r["total_value"], reverse=True)
-    return render_template("customers.html", customers=rows)
+    all_rows = sorted(by_customer.values(), key=lambda r: r["total_value"], reverse=True)
+    total = len(all_rows)
+    page = max(1, request.args.get("page", 1, type=int))
+    total_pages = max(1, (total + PAGE_SIZE - 1) // PAGE_SIZE)
+    rows = all_rows[(page - 1) * PAGE_SIZE : page * PAGE_SIZE]
+    return render_template(
+        "customers.html", customers=rows,
+        page=page, total_pages=total_pages, total=total,
+    )
 
 
 @app.route("/analytics")

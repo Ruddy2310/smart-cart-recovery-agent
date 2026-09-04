@@ -110,7 +110,7 @@
 </div>
 
 <div class="section-row" id="queue">
-  <div class="section-label">Priority Recovery Queue — {{ queue|length }} active</div>
+  <div class="section-label">Priority Recovery Queue — {{ queue|length }} actionable</div>
 </div>
 
 <div class="queue-table-wrap">
@@ -127,26 +127,53 @@
       </tr>
     </thead>
     <tbody>
-      {% for cart in queue %}
-      <tr class="queue-row" data-search="{{ cart.customer_name }} {{ cart.product_name }} {{ cart.customer_contact }}" onclick="openCart({{ cart.id }})">
-        <td>
-          <div class="cust-name">{{ cart.customer_name }}{% if cart.is_repeat_customer %}<span class="repeat-chip">repeat</span>{% endif %}</div>
-          <div class="cust-product mono">{{ cart.items_count }}× {{ cart.product_name }}</div>
-        </td>
-        <td class="mono">₹{{ "%.0f"|format(cart.cart_value) }}</td>
-        <td><span class="intent-badge intent-{{ cart.intent|lower|replace(' ', '-') }}">{{ cart.intent }}</span></td>
-        <td class="mono text-muted">{{ cart.idle_label }}</td>
-        <td>
-          <div class="prob-cell">
-            <div class="prob-bar"><div class="prob-fill" style="width:{{ cart.probability }}%"></div></div>
-            <span class="mono">{{ cart.probability }}%</span>
-          </div>
-        </td>
-        <td class="text-muted">{{ cart.action_text }}</td>
-        <td><span class="status-chip status-{{ cart.status }}">{{ cart.status|capitalize }}</span></td>
+      {% if queue %}
+        {% for cart in queue %}
+        <tr class="queue-row" data-search="{{ cart.customer_name }} {{ cart.product_name }} {{ cart.customer_contact }}" onclick="openCart({{ cart.id }})">
+          <td>
+            <div class="cust-name">{{ cart.customer_name }}{% if cart.is_repeat_customer %}<span class="repeat-chip">repeat</span>{% endif %}</div>
+            <div class="cust-product mono">{{ cart.items_count }}× {{ cart.product_name }}</div>
+          </td>
+          <td class="mono">₹{{ "%.0f"|format(cart.cart_value) }}</td>
+          <td><span class="intent-badge intent-{{ cart.intent|lower|replace(' ', '-') }}">{{ cart.intent }}</span></td>
+          <td class="mono text-muted">{{ cart.idle_label }}</td>
+          <td>
+            <div class="prob-cell">
+              <div class="prob-bar"><div class="prob-fill" style="width:{{ cart.probability }}%"></div></div>
+              <span class="mono">{{ cart.probability }}%</span>
+            </div>
+          </td>
+          <td class="text-muted">{{ cart.action_text }}</td>
+          <td><span class="status-chip status-{{ cart.status }}">{{ cart.status|capitalize }}</span></td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr><td colspan="7" style="padding:28px 18px; color:var(--text-dim); font-size:13px;">All carts have been recovered. Nothing left in the queue.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+{% set recovered_carts = carts | selectattr("status", "equalto", "recovered") | list %}
+{% if recovered_carts %}
+<div class="section-row" style="margin-top:28px;">
+  <div class="section-label">Recovered — {{ recovered_carts|length }}</div>
+</div>
+<div class="queue-table-wrap">
+  <table class="queue-table">
+    <thead>
+      <tr>
+        <th>Customer</th>
+        <th>Cart value</th>
+        <th>Intent</th>
+        <th>Time idle</th>
+        <th>Recovery prob.</th>
+        <th>Recommended action</th>
+        <th>Status</th>
       </tr>
-      {% endfor %}
-      {% for cart in carts if cart.status == 'recovered' %}
+    </thead>
+    <tbody>
+      {% for cart in recovered_carts %}
       <tr class="queue-row is-recovered" data-search="{{ cart.customer_name }} {{ cart.product_name }}" onclick="openCart({{ cart.id }})">
         <td>
           <div class="cust-name">{{ cart.customer_name }}{% if cart.is_repeat_customer %}<span class="repeat-chip">repeat</span>{% endif %}</div>
@@ -168,6 +195,7 @@
     </tbody>
   </table>
 </div>
+{% endif %}
 
 <!-- Cart detail data, rendered once and read by JS -->
 <script id="cart-data" type="application/json">
