@@ -110,57 +110,9 @@
 </div>
 
 <div class="section-row" id="queue">
-  <div class="section-label">Priority Recovery Queue — {{ queue|length }} actionable</div>
+  <div class="section-label">Priority Recovery Queue — {{ queue|length }} active</div>
 </div>
 
-<div class="queue-table-wrap">
-  <table class="queue-table">
-    <thead>
-      <tr>
-        <th>Customer</th>
-        <th>Cart value</th>
-        <th>Intent</th>
-        <th>Time idle</th>
-        <th>Recovery prob.</th>
-        <th>Recovery impact</th>
-        <th>Recommended action</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% if queue %}
-        {% for cart in queue %}
-        <tr class="queue-row" data-search="{{ cart.customer_name }} {{ cart.product_name }} {{ cart.customer_contact }}" onclick="openCart({{ cart.id }})">
-          <td>
-            <div class="cust-name">{{ cart.customer_name }}{% if cart.is_repeat_customer %}<span class="repeat-chip">repeat</span>{% endif %}</div>
-            <div class="cust-product mono">{{ cart.items_count }}× {{ cart.product_name }}</div>
-          </td>
-          <td class="mono">₹{{ "%.0f"|format(cart.cart_value) }}</td>
-          <td><span class="intent-badge intent-{{ cart.intent|lower|replace(' ', '-') }}">{{ cart.intent }}</span></td>
-          <td class="mono text-muted">{{ cart.idle_label }}</td>
-          <td>
-            <div class="prob-cell">
-              <div class="prob-bar"><div class="prob-fill" style="width:{{ cart.probability }}%"></div></div>
-              <span class="mono">{{ cart.probability }}%</span>
-            </div>
-          </td>
-          <td class="mono impact-cell">{{ cart.estimated_recoverable|inr }}</td>
-          <td class="text-muted">{{ cart.action_text }}</td>
-          <td><span class="status-chip status-{{ cart.status }}">{{ cart.status|capitalize }}</span></td>
-        </tr>
-        {% endfor %}
-      {% else %}
-        <tr><td colspan="8" style="padding:28px 18px; color:var(--text-dim); font-size:13px;">All carts have been recovered. Nothing left in the queue.</td></tr>
-      {% endif %}
-    </tbody>
-  </table>
-</div>
-
-{% set recovered_carts = carts | selectattr("status", "equalto", "recovered") | list %}
-{% if recovered_carts %}
-<div class="section-row" style="margin-top:28px;">
-  <div class="section-label">Recovered — {{ recovered_carts|length }}</div>
-</div>
 <div class="queue-table-wrap">
   <table class="queue-table">
     <thead>
@@ -175,7 +127,26 @@
       </tr>
     </thead>
     <tbody>
-      {% for cart in recovered_carts %}
+      {% for cart in queue %}
+      <tr class="queue-row" data-search="{{ cart.customer_name }} {{ cart.product_name }} {{ cart.customer_contact }}" onclick="openCart({{ cart.id }})">
+        <td>
+          <div class="cust-name">{{ cart.customer_name }}{% if cart.is_repeat_customer %}<span class="repeat-chip">repeat</span>{% endif %}</div>
+          <div class="cust-product mono">{{ cart.items_count }}× {{ cart.product_name }}</div>
+        </td>
+        <td class="mono">₹{{ "%.0f"|format(cart.cart_value) }}</td>
+        <td><span class="intent-badge intent-{{ cart.intent|lower|replace(' ', '-') }}">{{ cart.intent }}</span></td>
+        <td class="mono text-muted">{{ cart.idle_label }}</td>
+        <td>
+          <div class="prob-cell">
+            <div class="prob-bar"><div class="prob-fill" style="width:{{ cart.probability }}%"></div></div>
+            <span class="mono">{{ cart.probability }}%</span>
+          </div>
+        </td>
+        <td class="text-muted">{{ cart.action_text }}</td>
+        <td><span class="status-chip status-{{ cart.status }}">{{ cart.status|capitalize }}</span></td>
+      </tr>
+      {% endfor %}
+      {% for cart in carts if cart.status == 'recovered' %}
       <tr class="queue-row is-recovered" data-search="{{ cart.customer_name }} {{ cart.product_name }}" onclick="openCart({{ cart.id }})">
         <td>
           <div class="cust-name">{{ cart.customer_name }}{% if cart.is_repeat_customer %}<span class="repeat-chip">repeat</span>{% endif %}</div>
@@ -197,7 +168,6 @@
     </tbody>
   </table>
 </div>
-{% endif %}
 
 <!-- Cart detail data, rendered once and read by JS -->
 <script id="cart-data" type="application/json">
@@ -218,6 +188,8 @@
     "idle_label": {{ cart.idle_label|tojson }},
     "reasoning": {{ cart.reasoning|tojson }},
     "recovery_message": {{ (cart.recovery_message or "")|tojson }},
+    "contact_attempts": {{ cart.contact_attempts or 0 }},
+    "opted_out": {{ 1 if cart.opted_out else 0 }},
     "signals": {
       "previous_purchases": {{ cart.signals.previous_purchases }},
       "avg_order_value": {{ cart.signals.avg_order_value or 'null' }},
@@ -319,7 +291,6 @@
   .prob-cell{ display:flex; align-items:center; gap:9px; }
   .prob-bar{ width: 54px; height:4px; border-radius:3px; background: var(--surface-2); overflow:hidden; }
   .prob-fill{ height:100%; background: var(--coral); border-radius:3px; }
-  .impact-cell{ color: var(--emerald); font-weight: 600; }
 
   .status-chip{ font-size: 11px; font-weight:600; padding:3px 9px; border-radius:6px; }
   .status-abandoned{ color: var(--rose); background: var(--rose-dim); }
@@ -375,8 +346,8 @@
 
     const signalRows = [
       ['Previous purchases', c.signals.previous_purchases > 0 ? c.signals.previous_purchases : 'First-time customer'],
-      ['Avg. order value', c.signals.avg_order_value ? '₹' + Math.round(c.signals.avg_order_value) : '—'],
-      ['Last purchase', c.signals.last_purchase_days ? c.signals.last_purchase_days + ' days ago' : '—'],
+      ['Avg. order value', c.signals.avg_order_value ? '\u20b9' + Math.round(c.signals.avg_order_value) : '\u2014'],
+      ['Last purchase', c.signals.last_purchase_days ? c.signals.last_purchase_days + ' days ago' : '\u2014'],
       ['Device', c.signals.device],
       ['Location', c.signals.location],
       ['Session duration', c.signals.session_minutes + ' min'],
@@ -387,7 +358,7 @@
     body.innerHTML = `
       <div class="md-header">
         <div class="md-name">${c.customer_name}</div>
-        <div class="md-sub mono">${c.customer_contact} · Cart #${id} · ₹${Math.round(c.cart_value)} · ${c.status}</div>
+        <div class="md-sub mono">${c.customer_contact} \u00b7 Cart #${id} \u00b7 \u20b9${Math.round(c.cart_value)} \u00b7 ${c.status}</div>
       </div>
 
       <div class="md-section-title">Customer signals</div>
@@ -399,7 +370,7 @@
       <div class="ai-metric-grid">
         <div class="ai-metric"><div class="ai-metric-label">Recovery probability</div><div class="ai-metric-value">${c.probability}%</div></div>
         <div class="ai-metric"><div class="ai-metric-label">Purchase intent</div><div class="ai-metric-value" style="font-size:14px;">${c.intent}</div></div>
-        <div class="ai-metric"><div class="ai-metric-label">Est. recoverable</div><div class="ai-metric-value" style="font-size:14px;">₹${Math.round(c.estimated_recoverable)}</div></div>
+        <div class="ai-metric"><div class="ai-metric-label">Est. recoverable</div><div class="ai-metric-value" style="font-size:14px;">\u20b9${Math.round(c.estimated_recoverable)}</div></div>
       </div>
 
       <div class="md-section-title">Why the agent chose this action</div>
@@ -410,13 +381,16 @@
       <div class="rec-card">
         <div class="rec-card-title">Agent recommendation</div>
         <div class="rec-action">${c.action_text}</div>
-        <div class="rec-detail">Expected recovery ₹${Math.round(c.estimated_recoverable)} · Confidence ${c.probability}%</div>
+        <div class="rec-detail">Expected recovery \u20b9${Math.round(c.estimated_recoverable)} \u00b7 Confidence ${c.probability}%</div>
+        ${c.opted_out ? `<div class="rec-detail" style="color:var(--rose); margin-top:6px;">\u26d4 Customer opted out \u2014 agent will not contact again.</div>`
+          : `<div class="rec-detail" style="margin-top:6px;">Contact attempts: ${c.contact_attempts}/3${c.contact_attempts >= 3 ? ' \u2014 capped, escalated to human' : ''}</div>`}
         <div class="rec-buttons">
-          ${c.status !== 'recovered' ? `
+          ${c.status !== 'recovered' && !c.opted_out ? `
             <button class="btn primary" style="font-size:12.5px;" onclick="approveAndSend(${id})">Approve & Send</button>
             <form method="POST" action="/recover/${id}" style="display:inline;"><button type="submit" class="btn ghost-emerald" style="font-size:12.5px;">Mark recovered</button></form>
-          ` : `<span style="font-size:12.5px; color:var(--emerald);">✓ Recovered</span>`}
+          ` : c.status === 'recovered' ? `<span style="font-size:12.5px; color:var(--emerald);">\u2713 Recovered</span>` : ''}
           <button class="btn" style="font-size:12.5px;" onclick="closeCart()">Dismiss</button>
+          ${!c.opted_out && c.status !== 'recovered' ? `<form method="POST" action="/optout/${id}" style="margin-left:auto;"><button type="submit" class="btn" style="font-size:12.5px; color:var(--rose);">Do-not-contact</button></form>` : ''}
         </div>
       </div>
     `;
@@ -430,7 +404,11 @@
   async function approveAndSend(id) {
     try {
       const res = await fetch(`/generate/${id}`, { method: 'POST' });
-      await res.json();
+      const data = await res.json();
+      if (data.blocked) {
+        alert(data.reason);
+        return;
+      }
       location.reload();
     } catch (e) {
       alert('Could not send the recovery message.');
