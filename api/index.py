@@ -1,9 +1,9 @@
-"""Vercel entrypoint for the Smart Cart Recovery Flask application."""
-import os
 import sys
+import os
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if ROOT not in sys.path:
-    sys.path.insert(0, ROOT)
+# Make sure the project root (where app.py lives) is importable
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app import app  # noqa: E402,F401
+from app import app  # noqa: E402
+
+# Vercel's Python runtime looks for a WSGI/ASGI callable named `app`
