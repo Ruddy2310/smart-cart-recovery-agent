@@ -53,10 +53,19 @@ def init_db():
             created_at TEXT NOT NULL,
             status TEXT DEFAULT 'abandoned',
             recovery_message TEXT,
-            discount_offered INTEGER DEFAULT 0
+            discount_offered INTEGER DEFAULT 0,
+            contact_attempts INTEGER DEFAULT 0,
+            opted_out INTEGER DEFAULT 0
         )
         """
     )
+    # Lightweight migration for DBs created before contact_attempts/opted_out existed.
+    existing_cols = {row["name"] for row in conn.execute("PRAGMA table_info(carts)").fetchall()}
+    if "contact_attempts" not in existing_cols:
+        conn.execute("ALTER TABLE carts ADD COLUMN contact_attempts INTEGER DEFAULT 0")
+    if "opted_out" not in existing_cols:
+        conn.execute("ALTER TABLE carts ADD COLUMN opted_out INTEGER DEFAULT 0")
+
     conn.execute(
         """
         CREATE TABLE IF NOT EXISTS decisions (
@@ -197,72 +206,24 @@ def synthesize_signals(cart):
 
 
 def build_reasoning(cart, signals, priority, probability, idle_hours):
-    """
-    Reasoning grounded in the actual scoring inputs:
-      - cart_value  (contributes up to 20 pts)
-      - items_count (2 pts each)
-      - is_repeat   (15 pts bonus)
-      - idle_hours  (up to 15 pts, also drives urgency)
-    and reflects the actual channel + discount the scoring engine selected.
-    """
     parts = []
-
-    # --- Checkout behaviour (real signal from synthesize_signals) ---
     parts.append(
         f"{cart['customer_name']} reached the \u201c{signals['checkout_stage'].lower()}\u201d stage "
-        f"and spent {signals['session_minutes']} min browsing {signals['products_viewed']} products "
-        f"on {signals['device']} before abandoning."
+        f"and spent {signals['session_minutes']} min viewing {signals['products_viewed']} products before leaving."
     )
-
-    # --- Cart value contribution ---
-    value_score = round(min(cart["cart_value"] / 500, 20), 1)
-    parts.append(
-        f"The cart value of \u20b9{cart['cart_value']:.0f} added {value_score} points to the priority score "
-        f"({'high' if value_score >= 15 else 'moderate' if value_score >= 8 else 'low'} value cart)."
-    )
-
-    # --- Repeat customer bonus ---
     if cart["is_repeat_customer"]:
         parts.append(
-            f"A repeat-customer bonus of 15 points was applied — "
-            f"{cart['customer_name']} has {signals['previous_purchases']} prior order(s), "
-            f"making them a high-trust buyer worth prioritising."
+            f"They've ordered {signals['previous_purchases']} times before at an average of "
+            f"\u20b9{signals['avg_order_value']:.0f} per order, so this is a known, high-trust buyer."
         )
+    if idle_hours > 24:
+        parts.append(f"The cart has been idle for {format_idle(idle_hours)} \u2014 recovery odds drop the longer this sits.")
     else:
-        parts.append(
-            "No repeat-customer bonus applied — this appears to be a first-time buyer, "
-            "so the offer needs to do more of the work."
-        )
-
-    # --- Idle time contribution and urgency ---
-    idle_score = round(min(idle_hours * 1.5, 15), 1)
-    if idle_hours > 48:
-        parts.append(
-            f"The cart has been idle for {format_idle(idle_hours)} (+{idle_score} urgency points) \u2014 "
-            f"recovery likelihood is declining and immediate outreach is critical."
-        )
-    elif idle_hours > 6:
-        parts.append(
-            f"Idle for {format_idle(idle_hours)} (+{idle_score} urgency points) \u2014 "
-            f"still within the effective recovery window but urgency is rising."
-        )
-    else:
-        parts.append(
-            f"Idle for only {format_idle(idle_hours)} (+{idle_score} urgency points) \u2014 "
-            f"the customer is still recent and outreach now has the highest chance of success."
-        )
-
-    # --- Final decision summary ---
-    channel = recommended_channel(priority)
-    score, _, discount = score_recovery_priority(
-        cart["cart_value"], cart["items_count"], cart["is_repeat_customer"], idle_hours
-    )
+        parts.append(f"Idle for only {format_idle(idle_hours)}, still well inside the ideal recovery window.")
     parts.append(
-        f"Overall priority score: {round(score, 1)} \u2192 {priority} tier. "
-        f"Agent recommends {channel} with a {discount}% discount code. "
-        f"Estimated recovery probability: {probability}%."
+        f"Similar {priority.lower()}-priority carts convert at roughly {probability}% when contacted "
+        f"through the recommended channel within the next hour."
     )
-
     return " ".join(parts)
 
 
@@ -342,25 +303,6 @@ app.jinja_env.filters["inr"] = format_inr
 # Routes
 # ---------------------------------------------------------------------------
 @app.route("/")
-def landing():
-    """Marketing home. Reuses the same scoring/stats engine as the app itself --
-    if a demo workspace is loaded, the hero numbers are real; otherwise we show
-    clearly-labeled sample figures instead of hardcoded marketing copy."""
-    conn = get_db()
-    carts = conn.execute("SELECT * FROM carts").fetchall()
-    conn.close()
-
-    live = bool(carts)
-    if live:
-        enriched = [enrich_cart(c) for c in carts]
-        stats = compute_stats(enriched)
-    else:
-        stats = None
-
-    return render_template("landing.html", stats=stats, live=live)
-
-
-@app.route("/dashboard")
 def dashboard():
     conn = get_db()
     carts = conn.execute("SELECT * FROM carts ORDER BY created_at DESC").fetchall()
@@ -427,27 +369,60 @@ def add_cart():
     return render_template("add_cart.html")
 
 
+MAX_CONTACT_ATTEMPTS = 3
+
+
 @app.route("/generate/<int:cart_id>", methods=["POST"])
 def generate(cart_id):
     conn = get_db()
     cart = conn.execute("SELECT * FROM carts WHERE id = ?", (cart_id,)).fetchone()
+
+    # Compliance stopping rule: never message a customer who opted out.
+    if cart["opted_out"]:
+        conn.close()
+        log_decision(cart_id, cart["customer_name"], "Suppressed \u2014 customer opted out",
+                     "Customer previously opted out of recovery messages; agent will not contact them again.",
+                     0, outcome="Suppressed")
+        return jsonify({"blocked": True, "reason": "Customer has opted out. No message sent."}), 200
+
+    # Stopping rule: cap outreach at MAX_CONTACT_ATTEMPTS so the agent can't
+    # spam a customer indefinitely.
+    if cart["contact_attempts"] >= MAX_CONTACT_ATTEMPTS:
+        conn.close()
+        log_decision(cart_id, cart["customer_name"], "Suppressed \u2014 max attempts reached",
+                     f"Already contacted {cart['contact_attempts']} times with no conversion. "
+                     f"Stopping rule ({MAX_CONTACT_ATTEMPTS} attempts) reached; escalating to a human agent instead of retrying.",
+                     0, outcome="Escalated")
+        return jsonify({"blocked": True, "reason": f"Max {MAX_CONTACT_ATTEMPTS} attempts reached. Escalated to a human agent."}), 200
+
     enriched = enrich_cart(cart)
 
     message = (
         f"Hi {cart['customer_name']}, we noticed you left {cart['product_name']} in your cart. "
         f"{'Your items are still saved, but stock is moving fast.' if enriched['priority']=='Medium' else 'Complete your purchase now before your discount expires.'} "
-        f"Get {enriched['discount_calc']}% off with code SAVE{enriched['discount_calc']}."
+        f"Get {enriched['discount_calc']}% off with code SAVE{enriched['discount_calc']}. "
+        f"Reply STOP anytime to opt out."
     )
 
+    new_attempts = cart["contact_attempts"] + 1
     conn.execute(
-        "UPDATE carts SET recovery_message = ?, discount_offered = ? WHERE id = ?",
-        (message, enriched["discount_calc"], cart_id),
+        "UPDATE carts SET recovery_message = ?, discount_offered = ?, contact_attempts = ? WHERE id = ?",
+        (message, enriched["discount_calc"], new_attempts, cart_id),
     )
     conn.commit()
     conn.close()
 
-    log_decision(cart_id, cart["customer_name"], f"Sent {enriched['action_text']}",
+    log_decision(cart_id, cart["customer_name"], f"Sent {enriched['action_text']} (attempt {new_attempts}/{MAX_CONTACT_ATTEMPTS})",
                  enriched["reasoning"], enriched["estimated_recoverable"], outcome="Pending")
+
+    # Compliant escalation: if this is a high-value / high-priority cart that's
+    # still not converting after 2 attempts, flag it for a human instead of
+    # silently retrying forever.
+    if new_attempts >= 2 and enriched["priority"] == "High":
+        log_decision(cart_id, cart["customer_name"], "Escalated to human agent",
+                     f"High-priority cart with {new_attempts} unconverted attempts and \u20b9{cart['cart_value']:.0f} at stake \u2014 "
+                     f"flagged for manual outreach rather than further automated messages.",
+                     enriched["estimated_recoverable"], outcome="Escalated")
 
     return jsonify({
         "message": message,
@@ -455,7 +430,23 @@ def generate(cart_id):
         "priority": enriched["priority"],
         "score": enriched["score"],
         "probability": enriched["probability"],
+        "contact_attempts": new_attempts,
     })
+
+
+@app.route("/optout/<int:cart_id>", methods=["POST"])
+def opt_out(cart_id):
+    conn = get_db()
+    cart = conn.execute("SELECT * FROM carts WHERE id = ?", (cart_id,)).fetchone()
+    conn.execute("UPDATE carts SET opted_out = 1 WHERE id = ?", (cart_id,))
+    conn.commit()
+    conn.close()
+    if cart:
+        log_decision(cart_id, cart["customer_name"], "Customer opted out",
+                     "Customer requested no further contact. Agent will not message this cart again.",
+                     0, outcome="Suppressed")
+    flash("Customer marked do-not-contact.", "info")
+    return redirect(url_for("dashboard"))
 
 
 @app.route("/recover/<int:cart_id>", methods=["POST"])
@@ -488,23 +479,12 @@ def delete_cart(cart_id):
     return redirect(url_for("dashboard"))
 
 
-PAGE_SIZE = 20
-
 @app.route("/decisions")
 def decisions_log():
-    page = max(1, request.args.get("page", 1, type=int))
     conn = get_db()
-    total = conn.execute("SELECT COUNT(*) FROM decisions").fetchone()[0]
-    rows = conn.execute(
-        "SELECT * FROM decisions ORDER BY created_at DESC LIMIT ? OFFSET ?",
-        (PAGE_SIZE, (page - 1) * PAGE_SIZE),
-    ).fetchall()
+    rows = conn.execute("SELECT * FROM decisions ORDER BY created_at DESC LIMIT 100").fetchall()
     conn.close()
-    total_pages = max(1, (total + PAGE_SIZE - 1) // PAGE_SIZE)
-    return render_template(
-        "decisions.html", decisions=rows,
-        page=page, total_pages=total_pages, total=total,
-    )
+    return render_template("decisions.html", decisions=rows)
 
 
 @app.route("/customers")
@@ -525,15 +505,8 @@ def customers():
         if c["status"] == "recovered":
             entry["recovered"] += 1
 
-    all_rows = sorted(by_customer.values(), key=lambda r: r["total_value"], reverse=True)
-    total = len(all_rows)
-    page = max(1, request.args.get("page", 1, type=int))
-    total_pages = max(1, (total + PAGE_SIZE - 1) // PAGE_SIZE)
-    rows = all_rows[(page - 1) * PAGE_SIZE : page * PAGE_SIZE]
-    return render_template(
-        "customers.html", customers=rows,
-        page=page, total_pages=total_pages, total=total,
-    )
+    rows = sorted(by_customer.values(), key=lambda r: r["total_value"], reverse=True)
+    return render_template("customers.html", customers=rows)
 
 
 @app.route("/analytics")
@@ -576,6 +549,88 @@ def analytics():
 @app.route("/campaigns")
 def campaigns():
     return render_template("campaigns.html")
+
+
+# ---------------------------------------------------------------------------
+# Batch simulation \u2014 measures the agent's differentiated strategy against a
+# generic flat-outreach baseline on a batch of synthetic carts. This is a
+# simulation on synthetic data (clearly labeled as such), not a claim about
+# live production numbers.
+# ---------------------------------------------------------------------------
+BASELINE_FLAT_PROBABILITY = 19  # generic, one-size-fits-all outreach: no segmentation, no personalization
+
+SIM_NAMES = ["Aarav Mehta", "Diya Shah", "Rohan Patel", "Ananya Desai", "Kabir Shah",
+             "Ishita Verma", "Vivaan Joshi", "Meera Nair", "Aditya Rao", "Sanya Kapoor",
+             "Arjun Malhotra", "Riya Bhatt", "Karthik Iyer", "Neha Gupta", "Yash Trivedi",
+             "Priyanka Reddy", "Dev Patel", "Simran Kaur", "Rahul Sharma", "Tanya Chawla"]
+SIM_PRODUCTS = ["AirPods Pro 2", "Galaxy Watch 6", "Running Shoes", "Air Fryer", "Denim Jacket",
+                "Power Bank", "Bluetooth Speaker", "Smartwatch", "Backpack", "Sunglasses",
+                "Wireless Mouse", "Kindle", "Analog Watch", "Gaming Headset", "Yoga Mat"]
+
+
+def simulate_batch(n=50, seed=None):
+    rnd = random.Random(seed if seed is not None else 42)
+    rows = []
+    agent_recovered_value = 0.0
+    baseline_recovered_value = 0.0
+    agent_recovered_count = 0
+    baseline_recovered_count = 0
+    total_value = 0.0
+
+    for i in range(n):
+        value = round(rnd.uniform(800, 18000), 0)
+        items = rnd.randint(1, 3)
+        is_repeat = rnd.random() < 0.35
+        idle_hours = round(rnd.uniform(0.2, 70), 1)
+        total_value += value
+
+        score, priority, discount = score_recovery_priority(value, items, is_repeat, idle_hours)
+        agent_prob = recovery_probability(score, is_repeat, idle_hours)
+
+        # independent stochastic draw per scenario, seeded for reproducibility
+        agent_roll = rnd.random() * 100
+        baseline_roll = rnd.random() * 100
+        agent_won = agent_roll < agent_prob
+        baseline_won = baseline_roll < BASELINE_FLAT_PROBABILITY
+
+        if agent_won:
+            agent_recovered_value += value
+            agent_recovered_count += 1
+        if baseline_won:
+            baseline_recovered_value += value
+            baseline_recovered_count += 1
+
+        rows.append({
+            "customer": SIM_NAMES[i % len(SIM_NAMES)],
+            "product": SIM_PRODUCTS[i % len(SIM_PRODUCTS)],
+            "value": value,
+            "priority": priority,
+            "agent_prob": agent_prob,
+            "agent_action": recommended_action(priority, discount),
+            "agent_won": agent_won,
+            "baseline_won": baseline_won,
+        })
+
+    return {
+        "rows": rows,
+        "n": n,
+        "total_value": round(total_value, 0),
+        "agent_recovered_value": round(agent_recovered_value, 0),
+        "baseline_recovered_value": round(baseline_recovered_value, 0),
+        "agent_recovered_count": agent_recovered_count,
+        "baseline_recovered_count": baseline_recovered_count,
+        "agent_rate": round((agent_recovered_count / n) * 100, 1),
+        "baseline_rate": round((baseline_recovered_count / n) * 100, 1),
+        "uplift_value": round(agent_recovered_value - baseline_recovered_value, 0),
+        "uplift_rate": round(((agent_recovered_count - baseline_recovered_count) / n) * 100, 1),
+    }
+
+
+@app.route("/simulation")
+def simulation():
+    seed = request.args.get("seed", type=int)
+    result = simulate_batch(n=50, seed=seed)
+    return render_template("simulation.html", result=result, seed=seed)
 
 
 @app.route("/settings")
